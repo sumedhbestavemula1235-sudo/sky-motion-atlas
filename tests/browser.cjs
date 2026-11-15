@@ -96,6 +96,10 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
  await page.goto(base+'/#earth?band=09&a=4&b=10&mode=pair');await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);
  assert.equal(await page.inputValue('#seq-channel'),'09');assert.equal(await page.inputValue('#seq-time'),'10');assert.equal(await page.inputValue('#seq-reference'),'4');assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'pair');
  await page.click('[data-seq-mode="wipe"]');await page.screenshot({path:path.join(root,'work/earth-sequence-desktop.png'),fullPage:true});
+ await page.click('#mark-a');await page.locator('#seq-stage').click({position:{x:150,y:150}});
+ await page.click('#mark-b');await page.locator('#seq-stage').click({position:{x:200,y:180}});
+ assert.equal(await page.locator('.change-overlay circle').count(),2);assert.equal(await page.locator('.change-overlay path').count(),1);assert.match(await page.locator('#mark-result').textContent(),/preview pixels apart/);assert.match(await page.locator('#mark-result').textContent(),/not a distance in kilometers/);
+ await page.fill('#seq-time','11');assert.equal(await page.locator('.change-overlay circle').count(),0);
  const sequenceDownload=page.waitForEvent('download');await page.click('#seq-export');const sequence=await sequenceDownload;assert.ok((await fs.stat(await sequence.path())).size>1000);
  await page.goto(base+'/#2');await page.waitForFunction(()=>!document.querySelector('#variable-blink').disabled);
  assert.equal(await page.locator('h1').textContent(),'R Draconis');

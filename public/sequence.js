@@ -10,6 +10,29 @@ async function sequenceView(target,params=new URLSearchParams()){
  bandbar.append(help.querySelector('label'),$('seq-channel'),$('seq-channel-help'));
  app.querySelector('.sequence-workspace').before(bandbar);
  let disposed=false,loadVersion=0,timer=null,loaded=false,manifest,channel,sheet,current=23,reference=0;
+ let marking=null,marks={},markKey='';
+ const guide=document.createElement('section');guide.className='panel change-guide';
+ guide.innerHTML='<span class="eyebrow">NEW HERE? FOLLOW ONE FEATURE</span><h3>Make the change visible.</h3><p>Pick a small feature you can recognize in both images. Mark its center in A, then its center in B. We’ll draw outlines and a connecting line.</p><div class="actions"><button id="mark-a">1 · Mark in A</button><button id="mark-b">2 · Mark in B</button><button id="mark-clear">Clear marks</button></div><p id="mark-result" role="status">Start with “Mark in A”. For clouds or terrain, choose a recognizable edge or landmark.</p><p class="note">Marks are chosen by you, not an automatic detection. A larger glow may be a brightness or display change, even when its center stays in the same place.</p>';
+ app.querySelector('.sequence-workspace').before(guide);
+ const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.setAttribute('viewBox','0 0 1000 1000');overlay.setAttribute('class','change-overlay');overlay.setAttribute('aria-hidden','true');$('seq-stage').append(overlay);
+ function clearMarks(){marks={};marking=null;overlay.replaceChildren();$('mark-result').textContent='Marks cleared. Choose “Mark in A” to start again.';}
+ function drawMarks(){
+  overlay.style.display=mode==='pair'?'none':'';
+  overlay.innerHTML=(marks.a&&marks.b?`<path d="M${marks.a.x} ${marks.a.y} L${marks.b.x} ${marks.b.y}" stroke="#f6b58d" stroke-width="4" stroke-dasharray="10 6"/>`:'')+Object.entries(marks).map(([key,p])=>`<circle cx="${p.x}" cy="${p.y}" r="22" fill="none" stroke="${key==='a'?'#c4ed9a':'#f6b58d'}" stroke-width="4"/><text x="${Math.min(940,p.x+30)}" y="${Math.max(32,p.y-25)}" fill="white" stroke="#071018" stroke-width="5" paint-order="stroke" font-size="28">${key.toUpperCase()}</text>`).join('');
+ }
+ function recordMark(x,y){
+  marks[marking]={x,y};const completed=marking;marking=null;drawMarks();
+  if(!marks.a||!marks.b){$('mark-result').textContent=`${completed.toUpperCase()} outlined. Now choose “Mark in ${completed==='a'?'B':'A'}” and click the SAME feature.`;return;}
+  const separation=Math.hypot(marks.b.x-marks.a.x,marks.b.y-marks.a.y)/1000*channel.tileSize;
+  const elapsed=Math.abs(Date.parse(channel.frames[current].date)-Date.parse(channel.frames[reference].date))/3600000;
+  const period=elapsed>=48?(elapsed/24).toFixed(1)+' days':elapsed.toFixed(2)+' hours';
+  const angular=['barnard','r-draconis','comet'].includes(target)?` About ${(separation*1.6).toFixed(1)} arcseconds on this image grid (not a physical distance).`:'';
+  const caveat=target==='mars'?'The rover’s pointing changes: this is NOT a measurement of terrain moving.':target==='comet'?'These frames track the predicted comet position, so background stars shift. This is NOT the comet’s sky motion.':target==='earth'?'Clouds change shape and the curved Earth introduces projection effects. This is not a distance in kilometers.':'Alignment, saturation and wavelength differences can shift the apparent center. This is not confirmed proper motion.';
+  setMode('wipe');divide(50);drawMarks();
+  $('mark-result').textContent=`Your two marks are ${separation.toFixed(1)} preview pixels apart over ${period}.${angular} ${separation<2?'Little apparent displacement: look for a change in shape or brightness instead. ':''}${caveat}`;
+ }
+ for(const key of ['a','b'])$('mark-'+key).onclick=()=>{if(!loaded)return;stop();marking=key;setMode('wipe');divide(key==='a'?100:0);$('mark-result').textContent=`Showing only ${key.toUpperCase()}. Click the feature’s center in the image. Keyboard: focus the image and press Enter to mark its center.`;$('seq-stage').scrollIntoView({block:'center',behavior:'auto'});$('seq-stage').focus({preventScroll:true});};
+ $('mark-clear').onclick=clearMarks;
  let mode=['single','wipe','pair'].includes(params.get('mode'))?params.get('mode'):'wipe';
  const abort=new AbortController();
  const stop=()=>{clearInterval(timer);timer=null;if(!disposed)$('seq-play').textContent='▶ Play 24 frames';};
@@ -18,6 +41,7 @@ async function sequenceView(target,params=new URLSearchParams()){
  const stamp=d=>d.replace('T',' ').replace(/\.\d+Z$/,'Z').replace('Z',' UTC');
  function paint(canvas,idx){const s=channel.tileSize,ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=target==='earth'||target==='mars';ctx.clearRect(0,0,768,768);ctx.drawImage(sheet,(idx%6)*s,Math.floor(idx/6)*s,s,s,0,0,768,768);}
  function draw(){
+  if(channel){const key=channel.id+':'+reference+':'+current;if(markKey&&key!==markKey){clearMarks();$('mark-result').textContent='The dates or band changed. Mark the feature again for this comparison.';}markKey=key;}
   if(!loaded||disposed)return;paint($('seq-a'),reference);paint($('seq-b'),current);
   const a=channel.frames[reference],b=channel.frames[current];
   $('seq-time').value=current;$('seq-reference').value=reference;
@@ -56,12 +80,12 @@ async function sequenceView(target,params=new URLSearchParams()){
  $('seq-wipe').oninput=e=>divide(Number(e.target.value));
  const stage=$('seq-stage');let dragging=false;
  const drag=e=>{if(!dragging||mode!=='wipe')return;const r=stage.getBoundingClientRect();divide(Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)));};
- stage.onpointerdown=e=>{if(mode!=='wipe'||!loaded)return;dragging=true;try{stage.setPointerCapture(e.pointerId);}catch{}drag(e);};stage.onpointermove=drag;stage.onpointerup=stage.onpointercancel=stage.onlostpointercapture=()=>{dragging=false;};
+ stage.onpointerdown=e=>{if(mode!=='wipe'||!loaded)return;if(marking){const r=stage.getBoundingClientRect();recordMark(Math.max(0,Math.min(1000,(e.clientX-r.left)/r.width*1000)),Math.max(0,Math.min(1000,(e.clientY-r.top)/r.height*1000)));return;}dragging=true;try{stage.setPointerCapture(e.pointerId);}catch{}drag(e);};stage.onpointermove=drag;stage.onpointerup=stage.onpointercancel=stage.onlostpointercapture=()=>{dragging=false;};
  $('seq-time').oninput=e=>{stop();current=Number(e.target.value);draw();};$('seq-reference').oninput=e=>{stop();reference=Number(e.target.value);draw();};
  const step=n=>{if(!loaded)return;stop();current=Math.max(0,Math.min(23,current+n));draw();};
  $('seq-back').onclick=()=>step(-1);$('seq-next').onclick=()=>step(1);$('seq-reset').onclick=()=>{stop();reference=0;current=23;draw();};
  $('seq-play').onclick=()=>{if(!loaded)return;if(timer){stop();return;}if(current===23)current=0;draw();timer=setInterval(()=>{if(current>=23){stop();return;}current++;draw();},Number($('seq-speed').value));$('seq-play').textContent='Ⅱ Pause';};
- $('seq-speed').onchange=stop;stage.onkeydown=e=>{if(['ArrowLeft','ArrowRight',' ','Escape'].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')step(-1);if(e.key==='ArrowRight')step(1);if(e.key===' ')$('seq-play').click();if(e.key==='Escape')stop();};
+ $('seq-speed').onchange=stop;stage.onkeydown=e=>{if(marking){if(e.key==='Enter'){e.preventDefault();recordMark(500,500);return;}if(e.key==='Escape'){marking=null;$('mark-result').textContent='Marking cancelled.';return;}if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key===' '){e.preventDefault();return;}}if(['ArrowLeft','ArrowRight',' ','Escape'].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')step(-1);if(e.key==='ArrowRight')step(1);if(e.key===' ')$('seq-play').click();if(e.key==='Escape')stop();};
  $('seq-channel').onchange=e=>selectChannel(e.target.value);
  $('seq-share').onclick=async()=>{const route={barnard:'1'}[target]||target;const url=location.origin+'/#'+route+'?'+new URLSearchParams({band:channel.id,a:reference,b:current,mode});const status=$('seq-action-status');try{await navigator.clipboard.writeText(url);status.textContent='View link copied with band, dates and comparison mode.';}catch{status.textContent=url;}};
  $('seq-export').onclick=()=>{if(!loaded)return;const filename=target+'-'+channel.id+'-'+channel.frames[current].date.replace(/[:.]/g,'-')+'.png';$('seq-b').toBlob(blob=>{const ok=blob&&download(filename,blob);if(!disposed)$('seq-action-status').textContent=ok?'Selected observation exported. Source and processing details are in the metadata download.':'Export failed. Try again.';});};
