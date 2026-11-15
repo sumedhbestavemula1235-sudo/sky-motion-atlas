@@ -7,11 +7,12 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const base=process.env.ATLAS_BASE_URL || 'http://127.0.0.1:8766';
 let server,browser;
-async function waitReady(){for(let i=0;i<60;i++){try{if((await fetch(base)).ok)return;}catch{}await new Promise(r=>setTimeout(r,200));}throw Error('Test server did not start');}
+async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signal:AbortSignal.timeout(3000)})).ok)return;}catch{}await new Promise(r=>setTimeout(r,200));}throw Error('Test server did not start');}
 (async()=>{
  if(!process.env.ATLAS_BASE_URL)server=spawn(process.env.PYTHON || 'python',['-c','from http.server import ThreadingHTTPServer; from api.archive import handler; ThreadingHTTPServer(("127.0.0.1",8766),handler).serve_forever()'],{cwd:root,stdio:'ignore'});
  await waitReady();
- browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ const proxyURL=process.env.ATLAS_BROWSER_PROXY;
+ browser=await chromium.launch({headless:true,args:['--no-sandbox'],...(proxyURL?{proxy:{server:proxyURL}}:{})});
  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true,reducedMotion:'reduce'});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
