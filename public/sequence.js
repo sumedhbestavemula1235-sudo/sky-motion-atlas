@@ -146,6 +146,6 @@ async function sequenceView(target,params=new URLSearchParams()){
   for(const c of manifest.channels){const o=document.createElement('option');o.value=c.id;o.textContent=c.label;$('seq-channel').append(o);}
   $('seq-channel').disabled=manifest.channels.length<2;
   $('seq-channel-help').textContent=target==='mars'?'Visible imagery only. Verified separated wavelength channels are not supplied for these shots.':target==='earth'?'Switch between actual visible, water-vapor and thermal-infrared observations at matching times.':'These are six real SPHEREx detector bands. Exact wavelength varies across the detector; changing bands chooses the nearest available observation times.';
-  await selectChannel(params.get('band')||(target==='earth'?'13':target==='mars'?'visible':'D3'),true);
+  await selectChannel(params.get('band')||(target==='earth'?'13':target==='mars'?'visible':target==='barnard'?'D6':'D3'),true);
  }catch{if(!disposed){$('seq-status').textContent='The observation manifest could not load. Reload this page to retry.';$('seq-subtitle').textContent='Archive temporarily unavailable.';}}
 }
