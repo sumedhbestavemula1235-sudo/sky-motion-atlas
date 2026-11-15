@@ -1,0 +1,29 @@
+{
+  "target": "R Draconis",
+  "center_icrs_degrees": [
+    248.1666666667,
+    66.7547222222
+  ],
+  "pixel_scale_arcsec": 1.05,
+  "field_arcmin": 4.48,
+  "processing": "North up, east left; WCS resampling with nearest neighbors. Each plate independently stretched with 10\u201399.7 percentile asinh. Not calibrated photometry: brightness is not directly comparable across plates.",
+  "credit": "Digitized Sky Survey, STScI/AURA; photographic data from the Palomar Observatory Sky Survey.",
+  "frames": [
+    {
+      "src": "/assets/r-draconis-1955-04-23.png",
+      "date": "1955-04-23",
+      "raw_date_obs_header": "1955-04-23T10:58:00",
+      "survey": "POSS I red",
+      "plate": "07M4",
+      "source": "https://archive.stsci.edu/cgi-bin/dss_search?v=poss1_red&r=16+32+40&d=%2B66+45+17&e=J2000&h=5&w=5&f=fits&c=none"
+    },
+    {
+      "src": "/assets/r-draconis-1993-08-13.png",
+      "date": "1993-08-13",
+      "raw_date_obs_header": "1993-08-13T04:88:00",
+      "survey": "POSS II red",
+      "plate": "A0CE",
+      "source": "https://archive.stsci.edu/cgi-bin/dss_search?v=poss2ukstu_red&r=16+32+40&d=%2B66+45+17&e=J2000&h=5&w=5&f=fits&c=none"
+    }
+  ]
+}

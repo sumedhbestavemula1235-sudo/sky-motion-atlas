@@ -61,7 +61,8 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
  await page.goto(base+'/#learn');await page.click('[data-band="5"]');assert.match(await page.locator('#band-range').textContent(),/D6/);await page.click('[data-answer="1"]');assert.match(await page.locator('#quiz-answer').textContent(),/Exactly/);
  await page.goto(base+'/#evidence');assert.equal(await page.locator('tbody tr').count(),2);
  await page.goto(base+'/#explore');
- assert.equal(await page.locator('.target-card').count(),4);
+ assert.equal(await page.locator('.target-card').count(),5);
+ await page.click('[data-filter="Star"]');assert.equal(await page.locator('.target-card').count(),2);assert.equal(await page.locator('[data-target="r-draconis"]').count(),1);await page.click('[data-filter="All"]');
  await page.click('#start-guide');assert.equal(await page.locator('#explore-guide').isVisible(),true);
  await page.fill('#target-search','Mars');assert.equal(await page.locator('.target-card').count(),1);
  await page.click('[data-save="mars"]');await page.reload();
@@ -77,10 +78,17 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
   assert.equal(await page.locator('.object-switcher [aria-current="page"]').getAttribute('href'),'#'+id);
  }
  await page.goto(base+'/#compare');await page.click('#compare-scale');assert.match(await page.locator('#scale-caption').textContent(),/53.2%/);
+ await page.goto(base+'/#2');await page.waitForFunction(()=>!document.querySelector('#variable-blink').disabled);
+ assert.equal(await page.locator('h1').textContent(),'R Draconis');
+ await page.click('#variable-blink');await page.waitForFunction(()=>document.querySelector('#variable-date').textContent.includes('1993'));await page.keyboard.press('Escape');assert.match(await page.locator('#variable-blink').textContent(),/Blink/);
+ await page.click('#variable-pair');assert.equal(await page.locator('#variable-second').isVisible(),true);
+ await page.click('[data-variable-frame="0"]');assert.match(await page.locator('#variable-date').textContent(),/1955/);assert.equal(await page.locator('#variable-second').isVisible(),false);
+ await page.screenshot({path:path.join(root,'work/r-draconis-desktop.png'),fullPage:true});
+ await page.click('#variable-blink');
  await page.locator('.object-switcher a[href="#comet"]').click();await page.waitForSelector('#selected-dot');
  await page.click('#present');assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('presenting')),true);await page.click('#present');
  await page.setViewportSize({width:390,height:844});
- for(const hash of ['home','explore','1','comet','learn','evidence','earth','mars','compare']){await page.goto(base+'/#'+hash);if(hash==='1')await page.waitForFunction(()=>!document.querySelector('#blink').disabled);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),true,'No horizontal overflow: '+hash);}
+ for(const hash of ['home','explore','1','comet','learn','evidence','earth','mars','compare','r-draconis']){await page.goto(base+'/#'+hash);if(hash==='1')await page.waitForFunction(()=>!document.querySelector('#blink').disabled);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),true,'No horizontal overflow: '+hash);}
  await page.goto(base+'/#mars');await page.locator('#planet-photo').evaluate(im=>im.decode());await page.screenshot({path:path.join(root,'work/mars-mobile.png'),fullPage:true});
  await page.goto(base+'/#1');await page.waitForFunction(()=>!document.querySelector('#blink').disabled);
  assert.equal(await page.locator('#sky').evaluate(c=>Math.abs(c.width/c.height-c.clientWidth/c.clientHeight)<.01),true,'Canvas aspect ratio preserves image geometry');

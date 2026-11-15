@@ -124,6 +124,10 @@ def pair():
 
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
 PAGES = {
+    "/variable.js": ("variable.js", "application/javascript; charset=utf-8"),
+    "/assets/r-draconis-1955-04-23.png": ("assets/r-draconis-1955-04-23.png", "image/png"),
+    "/assets/r-draconis-1993-08-13.png": ("assets/r-draconis-1993-08-13.png", "image/png"),
+    "/assets/r-draconis-metadata.json": ("assets/r-draconis-metadata.json", "application/json"),
     "/targets.js": ("targets.js", "application/javascript; charset=utf-8"),
     "/targets.css": ("targets.css", "text/css; charset=utf-8"),
     "/assets/earth-apollo17.jpg": ("assets/earth-apollo17.jpg", "image/jpeg"),
