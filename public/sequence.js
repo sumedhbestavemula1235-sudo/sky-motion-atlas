@@ -9,13 +9,15 @@ async function sequenceView(target,params=new URLSearchParams()){
  const help=$('seq-channel').closest('.panel');help.querySelector('.eyebrow').textContent='QUICK START';
  bandbar.append(help.querySelector('label'),$('seq-channel'),$('seq-channel-help'));
  app.querySelector('.sequence-workspace').before(bandbar);
- let disposed=false,loadVersion=0,timer=null,loaded=false,manifest,channel,sheet,current=23,reference=0;
- let marking=null,marks={},markKey='';
+ let disposed=false,loadVersion=0,timer=null,loaded=false,manifest,channel,sheet,current=0,reference=0;
+ let marking=null,marks={},markKey='',autoRun=false,autoResult=null;
  const guide=document.createElement('section');guide.className='panel change-guide';
  guide.innerHTML='<span class="eyebrow">NEW HERE? FOLLOW ONE FEATURE</span><h3>Make the change visible.</h3><p>Pick a small feature you can recognize in both images. Mark its center in A, then its center in B. We’ll draw outlines and a connecting line.</p><div class="actions"><button id="mark-a">1 · Mark in A</button><button id="mark-b">2 · Mark in B</button><button id="mark-clear">Clear marks</button></div><p id="mark-result" role="status">Start with “Mark in A”. For clouds or terrain, choose a recognizable edge or landmark.</p><p class="note">Marks are chosen by you, not an automatic detection. A larger glow may be a brightness or display change, even when its center stays in the same place.</p>';
- app.querySelector('.sequence-workspace').before(guide);
+ const advanced=document.createElement('details');advanced.className='manual-change-tools';advanced.innerHTML='<summary>Advanced: mark a feature yourself</summary>';advanced.append(guide);app.querySelector('.sequence-workspace').after(advanced);
+ const autoSummary=document.createElement('p');autoSummary.id='auto-summary';autoSummary.className='auto-summary';autoSummary.setAttribute('role','status');autoSummary.textContent='Press Play. We’ll compare the first and last images and highlight a matching feature when the image evidence is clear.';$('seq-stage').after(autoSummary);
+ help.querySelector('.seq-help').innerHTML='<li>Press Play to watch all 24 images.</li><li>At the end, look for the highlighted first and last positions.</li><li>Change wavelength to explore another band.</li>';
  const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.setAttribute('viewBox','0 0 1000 1000');overlay.setAttribute('class','change-overlay');overlay.setAttribute('aria-hidden','true');$('seq-stage').append(overlay);
- function clearMarks(){marks={};marking=null;overlay.replaceChildren();$('mark-result').textContent='Marks cleared. Choose “Mark in A” to start again.';}
+ function clearMarks(){autoRun=false;autoResult=null;$('seq-stage').classList.remove('auto-finished');$('auto-summary').textContent='Press Play to compare the first and last frames automatically.';marks={};marking=null;overlay.replaceChildren();$('mark-result').textContent='Marks cleared. Choose “Mark in A” to start again.';}
  function drawMarks(){
   overlay.style.display=mode==='pair'?'none':'';
   overlay.innerHTML=(marks.a&&marks.b?`<path d="M${marks.a.x} ${marks.a.y} L${marks.b.x} ${marks.b.y}" stroke="#f6b58d" stroke-width="4" stroke-dasharray="10 6"/>`:'')+Object.entries(marks).map(([key,p])=>`<circle cx="${p.x}" cy="${p.y}" r="22" fill="none" stroke="${key==='a'?'#c4ed9a':'#f6b58d'}" stroke-width="4"/><text x="${Math.min(940,p.x+30)}" y="${Math.max(32,p.y-25)}" fill="white" stroke="#071018" stroke-width="5" paint-order="stroke" font-size="28">${key.toUpperCase()}</text>`).join('');
@@ -33,15 +35,15 @@ async function sequenceView(target,params=new URLSearchParams()){
  }
  for(const key of ['a','b'])$('mark-'+key).onclick=()=>{if(!loaded)return;stop();marking=key;setMode('wipe');divide(key==='a'?100:0);$('mark-result').textContent=`Showing only ${key.toUpperCase()}. Click the feature’s center in the image. Keyboard: focus the image and press Enter to mark its center.`;$('seq-stage').scrollIntoView({block:'center',behavior:'auto'});$('seq-stage').focus({preventScroll:true});};
  $('mark-clear').onclick=clearMarks;
- let mode=['single','wipe','pair'].includes(params.get('mode'))?params.get('mode'):'wipe';
+ let mode=['single','wipe','pair'].includes(params.get('mode'))?params.get('mode'):'single';
  const abort=new AbortController();
- const stop=()=>{clearInterval(timer);timer=null;if(!disposed)$('seq-play').textContent='▶ Play 24 frames';};
+ const stop=()=>{autoRun=false;clearInterval(timer);timer=null;if(!disposed)$('seq-play').textContent='▶ Play 24 frames';};
  const visibility=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',visibility);
  cleanup=()=>{stop();disposed=true;loadVersion++;abort.abort();document.removeEventListener('visibilitychange',visibility);};
  const stamp=d=>d.replace('T',' ').replace(/\.\d+Z$/,'Z').replace('Z',' UTC');
  function paint(canvas,idx){const s=channel.tileSize,ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=target==='earth'||target==='mars';ctx.clearRect(0,0,768,768);ctx.drawImage(sheet,(idx%6)*s,Math.floor(idx/6)*s,s,s,0,0,768,768);}
  function draw(){
-  if(channel){const key=channel.id+':'+reference+':'+current;if(markKey&&key!==markKey){clearMarks();$('mark-result').textContent='The dates or band changed. Mark the feature again for this comparison.';}markKey=key;}
+  if(channel){const key=channel.id+':'+reference+':'+current;if(markKey&&key!==markKey&&!autoRun){clearMarks();$('mark-result').textContent='The dates or band changed. Mark the feature again for this comparison.';}markKey=key;}
   if(!loaded||disposed)return;paint($('seq-a'),reference);paint($('seq-b'),current);
   const a=channel.frames[reference],b=channel.frames[current];
   $('seq-time').value=current;$('seq-reference').value=reference;
@@ -52,11 +54,28 @@ async function sequenceView(target,params=new URLSearchParams()){
   $('seq-a').setAttribute('aria-label','Reference A: '+stamp(a.date));$('seq-b').setAttribute('aria-label','Selected B: '+stamp(b.date));
   document.querySelectorAll('[data-seq-frame]').forEach(el=>el.setAttribute('aria-pressed',String(Number(el.dataset.seqFrame)===current)));
  }
+ function beginAutomatic(){
+  clearMarks();autoRun=true;current=0;reference=0;setMode('single');
+  const small=document.createElement('canvas');small.width=small.height=96;const ctx=small.getContext('2d',{willReadFrequently:true});
+  const read=idx=>{const s=channel.tileSize;ctx.drawImage(sheet,idx%6*s,Math.floor(idx/6)*s,s,s,0,0,96,96);const rgba=ctx.getImageData(0,0,96,96).data;return Array.from({length:96*96},(_,i)=>.2126*rgba[i*4]+.7152*rgba[i*4+1]+.0722*rgba[i*4+2]);};
+  autoResult=estimateFeature(read(0),read(23),96,['barnard','r-draconis'].includes(target));
+  if(autoResult){marks.a=autoResult.a;drawMarks();$('auto-summary').textContent='First position outlined in green. Watch the sequence; the last position will appear in orange at the end.';}
+  else $('auto-summary').textContent='Playing the real images. No reliable first-to-last feature match was found, so no motion path will be guessed.';
+  draw();
+ }
+ function finishAutomatic(){
+  autoRun=false;
+  if(autoResult){marks={a:autoResult.a,b:autoResult.b};drawMarks();const pixels=Math.hypot(marks.b.x-marks.a.x,marks.b.y-marks.a.y)/1000*channel.tileSize;
+   const explanation=target==='mars'?'Camera pointing can account for this shift; it is not moving terrain.':target==='comet'?'The camera view follows the predicted comet position, so this may be a background feature.':target==='earth'?'Cloud shape, map projection and illumination can affect this estimate.':'Alignment, saturation and wavelength differences can affect this estimate.';
+   $('auto-summary').textContent=(pixels<channel.tileSize/96?'The matched feature stays in nearly the same place. Look for shape or brightness differences. ':`The matched image feature shifts approximately ${pixels.toFixed(1)} preview pixels from first to last. `)+'Green = first; orange = last. '+explanation+' This is an image-pattern estimate, not confirmed physical motion.';
+  }else $('auto-summary').textContent='Sequence complete. These images did not provide a reliable matching feature. Camera changes, noise or changing shapes can prevent tracking; no motion line is shown.';
+  $('seq-stage').classList.add('auto-finished');
+ }
  function setMode(next){mode=next;$('seq-stage').dataset.mode=mode;$('seq-wipe-label').hidden=mode!=='wipe';$('seq-reference-label').hidden=mode==='single';document.querySelectorAll('[data-seq-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.seqMode===mode)));}
  function divide(value){$('seq-wipe').value=value;$('seq-wipe-value').textContent=Math.round(value)+'%';$('seq-stage').style.setProperty('--split',value+'%');}
  const nearest=(frames,date)=>frames.reduce((best,f,i)=>Math.abs(Date.parse(f.date)-date)<Math.abs(Date.parse(frames[best].date)-date)?i:best,0);
  async function selectChannel(id,initial=false){
-  const version=++loadVersion;stop();loaded=false;
+  const version=++loadVersion;stop();clearMarks();loaded=false;
   const oldB=channel&&Date.parse(channel.frames[current].date),oldA=channel&&Date.parse(channel.frames[reference].date);
   channel=manifest.channels.find(c=>c.id===id)||manifest.channels[0];
   $('seq-controls').disabled=true;$('seq-share').disabled=true;$('seq-export').disabled=true;$('seq-status').textContent='Loading '+channel.label+' observations…';
@@ -66,7 +85,7 @@ async function sequenceView(target,params=new URLSearchParams()){
    const next=new Image();next.src=channel.sheet;await next.decode();
    if(disposed||version!==loadVersion)return;
    sheet=next;loaded=true;
-   if(initial){current=Math.round(safeNumber(params.get('b'),23,0,23));reference=Math.round(safeNumber(params.get('a'),0,0,23));}
+   if(initial){current=Math.round(safeNumber(params.get('b'),0,0,23));reference=Math.round(safeNumber(params.get('a'),0,0,23));}
    else{current=nearest(channel.frames,oldB);reference=nearest(channel.frames,oldA);}
    $('seq-channel').value=channel.id;$('seq-controls').disabled=false;$('seq-share').disabled=false;$('seq-export').disabled=false;
    $('seq-count').textContent=channel.frames.length+' real frames';
@@ -84,7 +103,7 @@ async function sequenceView(target,params=new URLSearchParams()){
  $('seq-time').oninput=e=>{stop();current=Number(e.target.value);draw();};$('seq-reference').oninput=e=>{stop();reference=Number(e.target.value);draw();};
  const step=n=>{if(!loaded)return;stop();current=Math.max(0,Math.min(23,current+n));draw();};
  $('seq-back').onclick=()=>step(-1);$('seq-next').onclick=()=>step(1);$('seq-reset').onclick=()=>{stop();reference=0;current=23;draw();};
- $('seq-play').onclick=()=>{if(!loaded)return;if(timer){stop();return;}if(current===23)current=0;draw();timer=setInterval(()=>{if(current>=23){stop();return;}current++;draw();},Number($('seq-speed').value));$('seq-play').textContent='Ⅱ Pause';};
+ $('seq-play').onclick=()=>{if(!loaded)return;if(timer){stop();return;}beginAutomatic();timer=setInterval(()=>{current++;draw();if(current>=23){finishAutomatic();stop();}},Number($('seq-speed').value));$('seq-play').textContent='Ⅱ Pause';};
  $('seq-speed').onchange=stop;stage.onkeydown=e=>{if(marking){if(e.key==='Enter'){e.preventDefault();recordMark(500,500);return;}if(e.key==='Escape'){marking=null;$('mark-result').textContent='Marking cancelled.';return;}if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key===' '){e.preventDefault();return;}}if(['ArrowLeft','ArrowRight',' ','Escape'].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')step(-1);if(e.key==='ArrowRight')step(1);if(e.key===' ')$('seq-play').click();if(e.key==='Escape')stop();};
  $('seq-channel').onchange=e=>selectChannel(e.target.value);
  $('seq-share').onclick=async()=>{const route={barnard:'1'}[target]||target;const url=location.origin+'/#'+route+'?'+new URLSearchParams({band:channel.id,a:reference,b:current,mode});const status=$('seq-action-status');try{await navigator.clipboard.writeText(url);status.textContent='View link copied with band, dates and comparison mode.';}catch{status.textContent=url;}};

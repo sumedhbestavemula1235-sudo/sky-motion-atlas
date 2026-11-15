@@ -1,6 +1,7 @@
 /* Run against a local Python handler, or ATLAS_BASE_URL for deployment smoke tests. */
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
+require('./auto-track.cjs');
 const {spawn}=require('node:child_process');
 const fs=require('node:fs/promises');
 const path=require('node:path');
@@ -82,25 +83,27 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
   await page.goto(base+'/#'+route);await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);
   assert.equal(await page.locator('#seq-channel option').count(),bands);
   assert.equal(await page.locator('[data-seq-frame]').count(),24);
-  const last=await page.locator('#seq-b').evaluate(c=>c.toDataURL());
+  assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'single');await page.fill('#seq-time','23');const last=await page.locator('#seq-b').evaluate(c=>c.toDataURL());
   await page.fill('#seq-time','0');const first=await page.locator('#seq-b').evaluate(c=>c.toDataURL());assert.notEqual(first,last,'First and last are different real images: '+route);
-  await page.fill('#seq-time','23');await page.fill('#seq-reference','3');assert.match(await page.locator('#seq-passport-frame').textContent(),/24 \/ 24/);
-  await page.locator('#seq-stage').scrollIntoViewIfNeeded();const bounds=await page.locator('#seq-stage').boundingBox();await page.mouse.move(bounds.x+bounds.width*.25,bounds.y+bounds.height*.5);await page.mouse.down();await page.mouse.move(bounds.x+bounds.width*.75,bounds.y+bounds.height*.5);await page.mouse.up();assert.ok(Number(await page.inputValue('#seq-wipe'))>70,'Draggable comparison works');
+  await page.fill('#seq-time','23');await page.click('[data-seq-mode="wipe"]');await page.fill('#seq-reference','3');assert.match(await page.locator('#seq-passport-frame').textContent(),/24 \/ 24/);
+  await page.click('[data-seq-mode="wipe"]');await page.locator('#seq-stage').scrollIntoViewIfNeeded();const bounds=await page.locator('#seq-stage').boundingBox();await page.mouse.move(bounds.x+bounds.width*.25,bounds.y+bounds.height*.5);await page.mouse.down();await page.mouse.move(bounds.x+bounds.width*.75,bounds.y+bounds.height*.5);await page.mouse.up();assert.ok(Number(await page.inputValue('#seq-wipe'))>70,'Draggable comparison works');
   await page.click('[data-seq-mode="pair"]');assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'pair');
   if(bands>1){
    const options=await page.locator('#seq-channel option').evaluateAll(xs=>xs.map(x=>x.value));
    for(const band of options){await page.selectOption('#seq-channel',band);await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);assert.match(await page.locator('#seq-passport-band').textContent(),new RegExp(band));}
   }else assert.equal(await page.locator('#seq-channel').isDisabled(),true);
   await page.click('#seq-play');await page.waitForFunction(()=>Number(document.querySelector('#seq-time').value)>0&&Number(document.querySelector('#seq-time').value)<23);await page.click('#seq-play');
+  await page.locator('#seq-speed').evaluate(el=>{el.add(new Option('Test speed','1'));el.value='1';});await page.click('#seq-play');await page.waitForSelector('#seq-stage.auto-finished');assert.equal(await page.inputValue('#seq-time'),'23');console.log('Automatic comparison '+route+': '+await page.locator('#auto-summary').textContent());
  }
  await page.goto(base+'/#earth?band=09&a=4&b=10&mode=pair');await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);
  assert.equal(await page.inputValue('#seq-channel'),'09');assert.equal(await page.inputValue('#seq-time'),'10');assert.equal(await page.inputValue('#seq-reference'),'4');assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'pair');
  await page.click('[data-seq-mode="wipe"]');await page.screenshot({path:path.join(root,'work/earth-sequence-desktop.png'),fullPage:true});
- await page.click('#mark-a');await page.locator('#seq-stage').click({position:{x:150,y:150}});
+ await page.locator('.manual-change-tools summary').click();await page.click('#mark-a');await page.locator('#seq-stage').click({position:{x:150,y:150}});
  await page.click('#mark-b');await page.locator('#seq-stage').click({position:{x:200,y:180}});
  assert.equal(await page.locator('.change-overlay circle').count(),2);assert.equal(await page.locator('.change-overlay path').count(),1);assert.match(await page.locator('#mark-result').textContent(),/preview pixels apart/);assert.match(await page.locator('#mark-result').textContent(),/not a distance in kilometers/);
  await page.fill('#seq-time','11');assert.equal(await page.locator('.change-overlay circle').count(),0);
  const sequenceDownload=page.waitForEvent('download');await page.click('#seq-export');const sequence=await sequenceDownload;assert.ok((await fs.stat(await sequence.path())).size>1000);
+ await page.locator('#seq-speed').evaluate(el=>{el.add(new Option('Test speed','1'));el.value='1';});await page.click('#seq-play');await page.waitForSelector('#seq-stage.auto-finished');assert.equal(await page.inputValue('#seq-time'),'23');assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'single');assert.match(await page.locator('#auto-summary').textContent(),/estimate|reliable matching/);
  await page.goto(base+'/#2');await page.waitForFunction(()=>!document.querySelector('#variable-blink').disabled);
  assert.equal(await page.locator('h1').textContent(),'R Draconis');
  await page.click('#variable-blink');await page.waitForFunction(()=>document.querySelector('#variable-date').textContent.includes('1993'));await page.keyboard.press('Escape');assert.match(await page.locator('#variable-blink').textContent(),/Blink/);
@@ -111,7 +114,7 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
  await page.goto(base+'/#comet-path');await page.waitForSelector('#selected-dot');
  await page.click('#present');assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('presenting')),true);await page.click('#present');
  await page.setViewportSize({width:390,height:844});
- await page.goto(base+'/#earth');await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);await page.fill('#seq-wipe','70');await page.fill('#seq-time','12');await page.screenshot({path:path.join(root,'work/earth-sequence-mobile.png'),fullPage:true});
+ await page.goto(base+'/#earth');await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);await page.click('[data-seq-mode="wipe"]');await page.fill('#seq-wipe','70');await page.fill('#seq-time','12');await page.screenshot({path:path.join(root,'work/earth-sequence-mobile.png'),fullPage:true});
  for(const hash of ['home','explore','1','comet','learn','evidence','earth','mars','compare','r-draconis']){await page.goto(base+'/#'+hash);if(hash==='1')await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),true,'No horizontal overflow: '+hash);}
  await page.goto(base+'/#mars-overview');await page.locator('#planet-photo').evaluate(im=>im.decode());await page.screenshot({path:path.join(root,'work/mars-mobile.png'),fullPage:true});
  await page.goto(base+'/#1?mission=1');await page.waitForFunction(()=>!document.querySelector('#blink').disabled);

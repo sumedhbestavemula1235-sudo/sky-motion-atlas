@@ -124,6 +124,7 @@ def pair():
 
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
 PAGES = {
+    "/auto-track.js": ("auto-track.js", "application/javascript; charset=utf-8"),
     "/sequence.js": ("sequence.js", "application/javascript; charset=utf-8"),
     "/sequence.css": ("sequence.css", "text/css; charset=utf-8"),
     "/variable.js": ("variable.js", "application/javascript; charset=utf-8"),
