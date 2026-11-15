@@ -104,6 +104,7 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
   assert.equal(await page.locator('#seq-b').evaluate(c=>c.toDataURL()),blinkB);
   await page.click('#seq-play');assert.equal(await page.inputValue('#seq-time'),'23');
   assert.match(await page.locator('#auto-summary').textContent(),/estimate|reliable matching/);
+  if(route==='1'){assert.match(await page.locator('.motion-measurement').textContent(),/px ≈ .*″ apparent shift/);assert.equal((await page.locator('.motion-connection').getAttribute('d')).split('M').length-1,2);}
   await page.click('[data-seq-mode="single"]');await page.fill('#seq-time','23');const last=await page.locator('#seq-b').evaluate(c=>c.toDataURL());
   await page.fill('#seq-time','0');const first=await page.locator('#seq-b').evaluate(c=>c.toDataURL());assert.notEqual(first,last,'First and last are different real images: '+route);
   await page.fill('#seq-time','23');await page.click('[data-seq-mode="wipe"]');await page.fill('#seq-reference','3');assert.match(await page.locator('#seq-passport-frame').textContent(),/24 \/ 24/);
@@ -122,7 +123,10 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
  await page.locator('.manual-change-tools summary').click();await page.click('#mark-a');await page.locator('#seq-stage').click({position:{x:150,y:150}});
  await page.click('#mark-b');await page.locator('#seq-stage').click({position:{x:200,y:180}});
  assert.equal(await page.locator('.change-overlay circle').count(),2);assert.equal(await page.locator('.change-overlay path').count(),1);assert.match(await page.locator('#mark-result').textContent(),/preview pixels apart/);assert.match(await page.locator('#mark-result').textContent(),/not a distance in kilometers/);
+ assert.equal((await page.locator('.motion-connection').getAttribute('d')).split('M').length-1,2,'Two connectors join A and B');
+ assert.match(await page.locator('.motion-measurement').textContent(),/px image-feature shift/);
  await page.fill('#seq-time','11');assert.equal(await page.locator('.change-overlay circle').count(),0);
+ assert.equal(await page.locator('.motion-measurement').count(),0,'Changing dates clears the old measurement');
  const sequenceDownload=page.waitForEvent('download');await page.click('#seq-export');const sequence=await sequenceDownload;assert.ok((await fs.stat(await sequence.path())).size>1000);
  await page.locator('#seq-speed').evaluate(el=>{el.add(new Option('Test speed','1'));el.value='1';});await page.click('#seq-play');await page.waitForSelector('#seq-stage.auto-finished');assert.equal(await page.inputValue('#seq-time'),'23');assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'single');assert.match(await page.locator('#auto-summary').textContent(),/estimate|reliable matching/);
  await page.goto(base+'/#2');await page.waitForFunction(()=>!document.querySelector('#variable-blink').disabled);

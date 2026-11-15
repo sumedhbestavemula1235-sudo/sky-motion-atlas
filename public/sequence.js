@@ -35,7 +35,16 @@ async function sequenceView(target,params=new URLSearchParams()){
  function clearMarks(){autoRun=false;autoResult=null;$('seq-stage').classList.remove('auto-finished');$('auto-summary').textContent='Press Blink to compare A and B with automatic feature matching.';marks={};marking=null;overlay.replaceChildren();$('mark-result').textContent='Marks cleared. Choose “Mark in A” to start again.';}
  function drawMarks(){
   overlay.style.display=mode==='pair'?'none':'';
-  overlay.innerHTML=(marks.a&&marks.b?`<path d="M${marks.a.x} ${marks.a.y} L${marks.b.x} ${marks.b.y}" stroke="#f6b58d" stroke-width="4" stroke-dasharray="10 6"/>`:'')+Object.entries(marks).map(([key,p])=>`<circle cx="${p.x}" cy="${p.y}" r="22" fill="none" stroke="${key==='a'?'#c4ed9a':'#f6b58d'}" stroke-width="4"/><text x="${Math.min(940,p.x+30)}" y="${Math.max(32,p.y-25)}" fill="white" stroke="#071018" stroke-width="5" paint-order="stroke" font-size="28">${key.toUpperCase()}</text>`).join('');
+  let connection='';
+  if(marks.a&&marks.b){
+   const a=marks.a,b=marks.b,dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+   const pixels=length/1000*channel.tileSize;
+   // Two connectors meet the actual endpoints; never enlarge the measured displacement.
+   const bend=Math.min(16,length/3),nx=length?-dy/length*bend:0,ny=length?dx/length*bend:0;
+   const label=pixels<.05?'A and B overlap · no resolved shift':target==='barnard'?`${pixels.toFixed(1)} px ≈ ${(pixels*1.6).toFixed(1)}″ apparent shift`:`${pixels.toFixed(1)} px image-feature shift`;
+   connection=(length?`<path class="motion-connection" d="M${a.x} ${a.y} Q${mx+nx} ${my+ny} ${b.x} ${b.y} M${a.x} ${a.y} Q${mx-nx} ${my-ny} ${b.x} ${b.y}" fill="none" stroke="#ffad63" stroke-width="5" stroke-linecap="round"/>`:'')+`<text class="motion-measurement" x="${Math.max(260,Math.min(740,mx))}" y="${Math.max(45,my-65)}" text-anchor="middle" fill="#ffce9e" stroke="#071018" stroke-width="9" stroke-linejoin="round" paint-order="stroke" font-size="26" font-weight="700">${label}</text>`;
+  }
+  overlay.innerHTML=connection+Object.entries(marks).map(([key,p])=>`<circle cx="${p.x}" cy="${p.y}" r="${key==='a'?26:34}" fill="none" stroke="${key==='a'?'#c4ed9a':'#ffad63'}" stroke-width="5"/><text x="${Math.max(40,Math.min(920,p.x+44))}" y="${Math.max(32,Math.min(965,p.y+(key==='a'?-36:48)))}" fill="${key==='a'?'#c4ed9a':'#ffad63'}" stroke="#071018" stroke-width="6" paint-order="stroke" font-size="32" font-weight="700">${key.toUpperCase()}</text>`).join('');
  }
  function recordMark(x,y){
   marks[marking]={x,y};const completed=marking;marking=null;drawMarks();
