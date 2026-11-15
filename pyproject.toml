@@ -1,2 +1,12 @@
+[project]
+name = "sky-motion-atlas"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "astropy>=6,<8",
+  "numpy>=1.26,<3",
+  "Pillow>=10,<13",
+]
+
 [tool.vercel]
 entrypoint = "api.archive:handler"
