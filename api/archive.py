@@ -125,6 +125,8 @@ def pair():
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
 PAGES = {
     "/atlas.css": ("atlas.css", "text/css; charset=utf-8"),
+    "/effects.css": ("effects.css", "text/css; charset=utf-8"),
+    "/effects.js": ("effects.js", "application/javascript; charset=utf-8"),
     "/comet-data.json": ("comet-data.json", "application/json"),
     "/atlas.js": ("atlas.js", "application/javascript; charset=utf-8"),
     "/": ("index.html", "text/html; charset=utf-8"),

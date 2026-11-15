@@ -19,6 +19,16 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
  // Avoid depending on third-party fonts in deterministic tests.
  await page.route('https://fonts.googleapis.com/**',r=>r.abort());
  await page.goto(base+'/#home');
+ await page.waitForSelector('.motion-control');
+ assert.equal(await page.locator('.motion-control').getAttribute('aria-pressed'),'false','Device reduced-motion preference is respected');
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await page.waitForFunction(()=>document.querySelector('.motion-control').getAttribute('aria-pressed')==='true');
+ assert.equal(await page.locator('.sky-star').count(),48);
+ assert.equal(await page.locator('.sky-star').first().evaluate(el=>getComputedStyle(el).animationName),'star-breathe');
+ await page.locator('.motion-control').click();
+ await page.reload();
+ assert.equal(await page.locator('.motion-control').getAttribute('aria-pressed'),'false','Ambient motion setting survives reload');
+ await page.emulateMedia({reducedMotion:'reduce'});
  await page.locator('#hero-frame').evaluate(im=>im.decode());
  await page.click('#hero-blink');await page.waitForFunction(()=>document.querySelector('#hero-date').textContent==='20 Aug 2026');await page.click('#hero-blink');
  await fs.mkdir(path.join(root,'work'),{recursive:true});
