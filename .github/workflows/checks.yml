@@ -27,4 +27,10 @@ jobs:
       - name: Run tests
         run: python -m unittest discover -s tests -v
       - name: Check browser JavaScript syntax
-        run: node --check public/guide.js
+        run: node --check public/atlas.js
+      - name: Install browser test runner
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Exercise the browser experience
+        run: npm run test:browser

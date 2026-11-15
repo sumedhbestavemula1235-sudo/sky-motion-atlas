@@ -124,6 +124,8 @@ def pair():
 
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
 PAGES = {
+    "/atlas.css": ("atlas.css", "text/css; charset=utf-8"),
+    "/comet-data.json": ("comet-data.json", "application/json"),
     "/atlas.js": ("atlas.js", "application/javascript; charset=utf-8"),
     "/": ("index.html", "text/html; charset=utf-8"),
     "/index.html": ("index.html", "text/html; charset=utf-8"),
@@ -148,7 +150,8 @@ class handler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path in PAGES:
             name, mime = PAGES[path]
-            self.send_bytes(200, mime, (PUBLIC / name).read_bytes(), "public, max-age=3600")
+            cache = "public, max-age=3600" if mime == "image/png" else "no-cache"
+            self.send_bytes(200, mime, (PUBLIC / name).read_bytes(), cache)
             return
         if path.rstrip("/") != "/api/archive":
             self.send_error(404)

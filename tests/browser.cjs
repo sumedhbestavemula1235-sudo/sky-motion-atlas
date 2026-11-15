@@ -1,0 +1,57 @@
+/* Run against a local Python handler, or ATLAS_BASE_URL for deployment smoke tests. */
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const {spawn}=require('node:child_process');
+const fs=require('node:fs/promises');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const base=process.env.ATLAS_BASE_URL || 'http://127.0.0.1:8766';
+let server,browser;
+async function waitReady(){for(let i=0;i<60;i++){try{if((await fetch(base)).ok)return;}catch{}await new Promise(r=>setTimeout(r,200));}throw Error('Test server did not start');}
+(async()=>{
+ if(!process.env.ATLAS_BASE_URL)server=spawn(process.env.PYTHON || 'python',['-c','from http.server import ThreadingHTTPServer; from api.archive import handler; ThreadingHTTPServer(("127.0.0.1",8766),handler).serve_forever()'],{cwd:root,stdio:'ignore'});
+ await waitReady();
+ browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true,reducedMotion:'reduce'});
+ const page=await context.newPage(),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ // Avoid depending on third-party fonts in deterministic tests.
+ await page.route('https://fonts.googleapis.com/**',r=>r.abort());
+ await page.goto(base+'/#home');
+ await page.locator('#hero-frame').evaluate(im=>im.decode());
+ await page.click('#hero-blink');await page.waitForFunction(()=>document.querySelector('#hero-date').textContent==='20 Aug 2026');await page.click('#hero-blink');
+ await fs.mkdir(path.join(root,'work'),{recursive:true});
+ await page.screenshot({path:path.join(root,'work/home-desktop.png'),fullPage:true});
+ await page.goto(base+'/#1?mission=1');
+ await page.waitForFunction(()=>!document.querySelector('#blink').disabled);
+ await page.locator('#sky').focus();await page.keyboard.press('ArrowRight');
+ assert.match(await page.locator('#passport-date').textContent(),/20 Aug/);
+ await page.keyboard.press('Space');assert.match(await page.locator('#blink').textContent(),/Pause/);await page.keyboard.press('Escape');
+ await page.click('[data-mode="pair"]');assert.equal(await page.getAttribute('[data-mode="pair"]','aria-pressed'),'true');
+ await page.click('[data-mode="wipe"]');assert.equal(await page.locator('#wipe-label').isVisible(),true);
+ await page.locator('#wipe').fill('35');assert.equal(await page.inputValue('#wipe'),'35');
+ await page.click('[data-mode="single"]');await page.locator('#sky').click({position:{x:300,y:230}});assert.match(await page.locator('#pin-readout').textContent(),/Your pin/);
+ await page.click('#mission-next');assert.equal(await page.getAttribute('[data-mode="wipe"]','aria-pressed'),'true');
+ await page.click('#mission-next');await page.click('#mission-next');assert.match(await page.locator('#mission-status').textContent(),/Add an observation/);
+ await page.fill('#observation','The bright core differs between the two visits. <script> must remain plain text.');
+ await page.fill('#explanation','Saturation, wavelength and calibration need checking.');
+ await page.click('#mission-next');assert.match(await page.locator('#mission-status').textContent(),/Investigation complete/);
+ const noteDownload=page.waitForEvent('download');await page.click('#export-note');const note=await noteDownload;
+ const notePath=await note.path();const json=JSON.parse(await fs.readFile(notePath,'utf8'));assert.equal(json.observations.length,2);assert.match(json.limitations,/saturated/);
+ const cardDownload=page.waitForEvent('download');await page.click('#export-card');const card=await cardDownload;const png=await fs.readFile(await card.path());assert.equal(png.readUInt32BE(16),1200);assert.equal(png.readUInt32BE(20),800);
+ await page.reload();await page.waitForFunction(()=>!document.querySelector('#blink').disabled);assert.match(await page.inputValue('#observation'),/bright core/);assert.match(await page.locator('#pin-readout').textContent(),/Saved pin/);
+ await page.screenshot({path:path.join(root,'work/lab-desktop.png'),fullPage:true});
+ await page.goto(base+'/#1?frame=1&mode=pair&zoom=1.5&contrast=1.2');await page.waitForFunction(()=>!document.querySelector('#blink').disabled);assert.equal(await page.inputValue('#zoom'),'1.5');assert.equal(await page.inputValue('#time'),'1');assert.equal(await page.getAttribute('[data-mode="pair"]','aria-pressed'),'true');
+ await page.goto(base+'/#comet');await page.waitForSelector('#selected-dot');assert.match(await page.locator('#comet-readout').textContent(),/1 \/ 167/);await page.click('#comet-forward');assert.match(await page.locator('#comet-readout').textContent(),/2 \/ 167/);
+ const csvDownload=page.waitForEvent('download');await page.click('#comet-export');const csv=await csvDownload;assert.match(await fs.readFile(await csv.path(),'utf8'),/Predicted positions, not image detections/);
+ await page.goto(base+'/#learn');await page.click('[data-band="5"]');assert.match(await page.locator('#band-range').textContent(),/D6/);await page.click('[data-answer="1"]');assert.match(await page.locator('#quiz-answer').textContent(),/Exactly/);
+ await page.goto(base+'/#evidence');assert.equal(await page.locator('tbody tr').count(),2);
+ await page.click('#present');assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('presenting')),true);await page.click('#present');
+ await page.setViewportSize({width:390,height:844});
+ for(const hash of ['home','explore','1','comet','learn','evidence']){await page.goto(base+'/#'+hash);if(hash==='1')await page.waitForFunction(()=>!document.querySelector('#blink').disabled);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),true,'No horizontal overflow: '+hash);}
+ await page.goto(base+'/#1');await page.waitForFunction(()=>!document.querySelector('#blink').disabled);
+ assert.equal(await page.locator('#sky').evaluate(c=>Math.abs(c.width/c.height-c.clientWidth/c.clientHeight)<.01),true,'Canvas aspect ratio preserves image geometry');
+ await page.screenshot({path:path.join(root,'work/lab-mobile.png'),fullPage:true});
+ assert.deepEqual(errors,[]);
+ console.log('Browser checks passed: real-frame controls, mission, saved notes, PNG/JSON/CSV exports, share state, comet explorer, band lesson, presentation and mobile layout.');
+})().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();if(server)server.kill();});
