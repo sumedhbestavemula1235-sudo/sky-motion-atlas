@@ -124,6 +124,10 @@ def pair():
 
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
 PAGES = {
+    "/targets.js": ("targets.js", "application/javascript; charset=utf-8"),
+    "/targets.css": ("targets.css", "text/css; charset=utf-8"),
+    "/assets/earth-apollo17.jpg": ("assets/earth-apollo17.jpg", "image/jpeg"),
+    "/assets/mars-viking.jpg": ("assets/mars-viking.jpg", "image/jpeg"),
     "/atlas.css": ("atlas.css", "text/css; charset=utf-8"),
     "/effects.css": ("effects.css", "text/css; charset=utf-8"),
     "/effects.js": ("effects.js", "application/javascript; charset=utf-8"),

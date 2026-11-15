@@ -151,8 +151,9 @@ function route(){
  cleanup();cleanup=()=>{};routeId++;
  const [path,query='']=location.hash.slice(1).split('?');const page=path||'home';
  document.querySelectorAll('nav a').forEach(a=>{const active=a.hash==='#'+page||(page==='1'&&a.hash==='#explore');if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
- if(page==='1')lab(new URLSearchParams(query));else if(page==='explore')explore();else if(page==='comet'||page==='0')comet();else if(page==='learn'||page==='2')learn();else if(page==='evidence')evidence();else home();
- document.title=(page==='1'?'Observation Lab':page==='comet'?'Interstellar Visitor':page==='learn'?'Field Guide':page==='evidence'?'Sources & Methods':'What Moved?')+' · Sky Motion Atlas';
+ if(page==='1')lab(new URLSearchParams(query));else if(page==='explore')catalogExplorer();else if(page==='earth'||page==='mars')planetView(page);else if(page==='compare')planetComparison();else if(page==='comet'||page==='0')comet();else if(page==='learn'||page==='2')learn();else if(page==='evidence')evidence();else home();
+ mountObjectNavigation(page==='0'?'comet':page);
+ document.title=(page==='earth'?'Earth':page==='mars'?'Mars':page==='compare'?'Compare Planets':page==='explore'?'Explore All Objects':page==='1'?'Observation Lab':page==='comet'?'Interstellar Visitor':page==='learn'?'Field Guide':page==='evidence'?'Sources & Methods':'What Moved?')+' · Sky Motion Atlas';
 }
 $('present').onclick=()=>{const on=document.body.classList.toggle('presenting');$('present').textContent=on?'Exit presentation':'Present →';announce(on?'Presentation mode enabled.':'Presentation mode closed.');};
 window.addEventListener('hashchange',()=>{route();window.scrollTo(0,0);$('app').focus({preventScroll:true});});

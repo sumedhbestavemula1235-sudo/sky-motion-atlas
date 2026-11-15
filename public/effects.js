@@ -2,7 +2,7 @@
 (() => {
  const sky=document.createElement('div');
  sky.className='cosmic-backdrop';sky.setAttribute('aria-hidden','true');
- sky.innerHTML='<div class="aurora"></div><div class="aurora second"></div><div class="sky-orbit"></div>';
+ sky.innerHTML='<div class="aurora"></div><div class="aurora second"></div><div class="sky-orbit"></div><div class="galaxy-haze"></div><div class="flying-comet comet-one"></div><div class="flying-comet comet-two"></div><div class="flying-comet comet-three"></div>';
  // Fixed decorative coordinates: no moving markers on scientific imagery.
  for(let i=0;i<48;i++){
   const star=document.createElement('i');star.className='sky-star';
