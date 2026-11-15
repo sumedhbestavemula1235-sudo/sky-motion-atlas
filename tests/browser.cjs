@@ -104,7 +104,11 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
   assert.equal(await page.locator('#seq-b').evaluate(c=>c.toDataURL()),blinkB);
   await page.click('#seq-play');assert.equal(await page.inputValue('#seq-time'),'23');
   assert.match(await page.locator('#auto-summary').textContent(),/estimate|reliable matching/);
-  if(route==='1'){assert.match(await page.locator('.motion-measurement').textContent(),/px ≈ .*″ apparent shift/);assert.equal((await page.locator('.motion-connection').getAttribute('d')).split('M').length-1,2);}
+  assert.equal(await page.locator('#auto-summary').isVisible(),false);
+  assert.equal(await page.locator('.change-overlay').evaluate(el=>getComputedStyle(el).visibility),'hidden');
+  await page.click('#seq-reveal');assert.equal(await page.locator('#auto-summary').isVisible(),true);
+  if(route==='1'){assert.equal(await page.locator('.motion-measurement').isVisible(),true);assert.match(await page.locator('.motion-measurement').textContent(),/px ≈ .*″ apparent shift/);assert.equal((await page.locator('.motion-connection').getAttribute('d')).split('M').length-1,2);}
+  await page.click('#seq-reveal');assert.equal(await page.locator('#auto-summary').isVisible(),false);
   await page.click('[data-seq-mode="single"]');await page.fill('#seq-time','23');const last=await page.locator('#seq-b').evaluate(c=>c.toDataURL());
   await page.fill('#seq-time','0');const first=await page.locator('#seq-b').evaluate(c=>c.toDataURL());assert.notEqual(first,last,'First and last are different real images: '+route);
   await page.fill('#seq-time','23');await page.click('[data-seq-mode="wipe"]');await page.fill('#seq-reference','3');assert.match(await page.locator('#seq-passport-frame').textContent(),/24 \/ 24/);

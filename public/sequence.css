@@ -7,3 +7,4 @@
 .auto-summary{padding:16px 20px;margin:0;background:#172b29;color:var(--lime);font-size:14px}.manual-change-tools{margin:24px 0;color:var(--muted)}.manual-change-tools summary{cursor:pointer;padding:14px}.seq-stage{transition:transform .7s ease}.seq-stage.auto-finished{transform:scale(.9)}@media(prefers-reduced-motion:reduce){.seq-stage{transition:none}}
 .seq-stage[data-mode=blink] .seq-a,.seq-stage[data-mode=blink] .seq-label-a{visibility:hidden}.toolbar [data-seq-mode=blink]{font-weight:700;border-color:var(--orange)}.seq-stage[data-mode=blink] .seq-label-b{color:var(--orange);max-width:95%}
 .change-overlay{z-index:3}.motion-connection{filter:drop-shadow(0 0 3px #000) drop-shadow(0 0 1px #000)}
+#seq-reveal{margin:16px 20px}.seq-stage.auto-finished:not(.results-revealed){transform:none}

@@ -30,9 +30,12 @@ async function sequenceView(target,params=new URLSearchParams()){
  guide.innerHTML='<span class="eyebrow">NEW HERE? FOLLOW ONE FEATURE</span><h3>Make the change visible.</h3><p>Pick a small feature you can recognize in both images. Mark its center in A, then its center in B. We’ll draw outlines and a connecting line.</p><div class="actions"><button id="mark-a">1 · Mark in A</button><button id="mark-b">2 · Mark in B</button><button id="mark-clear">Clear marks</button></div><p id="mark-result" role="status">Start with “Mark in A”. For clouds or terrain, choose a recognizable edge or landmark.</p><p class="note">Marks are chosen by you, not an automatic detection. A larger glow may be a brightness or display change, even when its center stays in the same place.</p>';
  const advanced=document.createElement('details');advanced.className='manual-change-tools';advanced.innerHTML='<summary>Advanced: mark a feature yourself</summary>';advanced.append(guide);app.querySelector('.sequence-workspace').after(advanced);
  const autoSummary=document.createElement('p');autoSummary.id='auto-summary';autoSummary.className='auto-summary';autoSummary.setAttribute('role','status');autoSummary.textContent='Press Play. We’ll compare the first and last images and highlight a matching feature when the image evidence is clear.';$('seq-stage').after(autoSummary);
- help.querySelector('.seq-help').innerHTML='<li>Press Blink to alternate two real observations.</li><li>Green marks A; orange marks B. An orange line connects a reliably matched feature. Try other frames or bands.</li><li>Click “Start noticing” to record what you found.</li>';
+ help.querySelector('.seq-help').innerHTML='<li>Press Blink to alternate two real observations.</li><li>Look for a change yourself, then click “Reveal change” to see the matched points, connecting lines and measurement.</li><li>Click “Start noticing” to record what you found.</li>';
  const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.setAttribute('viewBox','0 0 1000 1000');overlay.setAttribute('class','change-overlay');overlay.setAttribute('aria-hidden','true');$('seq-stage').append(overlay);
- function clearMarks(){autoRun=false;autoResult=null;$('seq-stage').classList.remove('auto-finished');$('auto-summary').textContent='Press Blink to compare A and B with automatic feature matching.';marks={};marking=null;overlay.replaceChildren();$('mark-result').textContent='Marks cleared. Choose “Mark in A” to start again.';}
+ const reveal=document.createElement('button');reveal.id='seq-reveal';reveal.className='primary';reveal.textContent='Reveal change';autoSummary.before(reveal);
+ function showResults(show){overlay.style.visibility=show?'visible':'hidden';autoSummary.hidden=!show;reveal.textContent=show?'Hide change':'Reveal change';reveal.setAttribute('aria-pressed',String(show));$('seq-stage').classList.toggle('results-revealed',show);}
+ reveal.onclick=()=>{if(loaded)showResults(reveal.getAttribute('aria-pressed')!=='true');};showResults(false);
+ function clearMarks(){showResults(false);autoRun=false;autoResult=null;$('seq-stage').classList.remove('auto-finished');$('auto-summary').textContent='Press Blink to compare A and B with automatic feature matching.';marks={};marking=null;overlay.replaceChildren();$('mark-result').textContent='Marks cleared. Choose “Mark in A” to start again.';}
  function drawMarks(){
   overlay.style.display=mode==='pair'?'none':'';
   let connection='';
@@ -47,7 +50,7 @@ async function sequenceView(target,params=new URLSearchParams()){
   overlay.innerHTML=connection+Object.entries(marks).map(([key,p])=>`<circle cx="${p.x}" cy="${p.y}" r="${key==='a'?26:34}" fill="none" stroke="${key==='a'?'#c4ed9a':'#ffad63'}" stroke-width="5"/><text x="${Math.max(40,Math.min(920,p.x+44))}" y="${Math.max(32,Math.min(965,p.y+(key==='a'?-36:48)))}" fill="${key==='a'?'#c4ed9a':'#ffad63'}" stroke="#071018" stroke-width="6" paint-order="stroke" font-size="32" font-weight="700">${key.toUpperCase()}</text>`).join('');
  }
  function recordMark(x,y){
-  marks[marking]={x,y};const completed=marking;marking=null;drawMarks();
+  marks[marking]={x,y};const completed=marking;marking=null;drawMarks();showResults(true);
   if(!marks.a||!marks.b){$('mark-result').textContent=`${completed.toUpperCase()} outlined. Now choose “Mark in ${completed==='a'?'B':'A'}” and click the SAME feature.`;return;}
   const separation=Math.hypot(marks.b.x-marks.a.x,marks.b.y-marks.a.y)/1000*channel.tileSize;
   const elapsed=Math.abs(Date.parse(channel.frames[current].date)-Date.parse(channel.frames[reference].date))/3600000;
