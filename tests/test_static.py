@@ -20,7 +20,10 @@ class StaticSiteTests(unittest.TestCase):
     def test_scientific_status_is_visible(self):
         index = (ROOT / "public" / "index.html").read_text(encoding="utf-8")
         guide = (ROOT / "public" / "guide.js").read_text(encoding="utf-8")
-        self.assertIn("SIMULATED PREVIEW", index)
+        self.assertIn('src="atlas.js"', index)
+        viewer = (ROOT / "public" / "atlas.js").read_text(encoding="utf-8")
+        self.assertIn("barnards-star-2025.png", viewer)
+        self.assertNotIn("requestAnimationFrame", viewer)
         self.assertIn("two archive visits", guide)
         self.assertIn("Load telescope images", guide)
 
