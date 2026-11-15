@@ -83,6 +83,18 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
   await page.goto(base+'/#'+route);await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);
   assert.equal(await page.locator('#seq-channel option').count(),bands);
   assert.equal(await page.locator('[data-seq-frame]').count(),24);
+  assert.equal(await page.locator('#seq-noticing').isVisible(),false);
+  await page.click('#seq-start-noticing');
+  assert.equal(await page.locator('#seq-noticing').isVisible(),true);
+  assert.equal(await page.locator('#seq-observation').evaluate(el=>el===document.activeElement),true);
+  await page.fill('#seq-observation','Observation for '+route);
+  await page.click('#seq-save-note');
+  await page.reload();await page.waitForFunction(()=>!document.querySelector('#seq-controls').disabled);
+  assert.equal(await page.locator('#seq-noticing').isVisible(),false);
+  await page.click('#seq-continue');
+  assert.equal(await page.inputValue('#seq-observation'),'Observation for '+route);
+  await page.click('#seq-return-frames');
+  assert.equal(await page.locator('#seq-stage').evaluate(el=>el===document.activeElement),true);
   assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'single');await page.fill('#seq-time','23');const last=await page.locator('#seq-b').evaluate(c=>c.toDataURL());
   await page.fill('#seq-time','0');const first=await page.locator('#seq-b').evaluate(c=>c.toDataURL());assert.notEqual(first,last,'First and last are different real images: '+route);
   await page.fill('#seq-time','23');await page.click('[data-seq-mode="wipe"]');await page.fill('#seq-reference','3');assert.match(await page.locator('#seq-passport-frame').textContent(),/24 \/ 24/);
