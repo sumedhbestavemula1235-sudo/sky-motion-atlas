@@ -25,6 +25,7 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
  await page.screenshot({path:path.join(root,'work/home-desktop.png'),fullPage:true});
  await page.goto(base+'/#1?mission=1');
  await page.waitForFunction(()=>!document.querySelector('#blink').disabled);
+ await page.click('[data-step="2"]');assert.match(await page.locator('#mission-status').textContent(),/Finish step 01/);
  await page.locator('#sky').focus();await page.keyboard.press('ArrowRight');
  assert.match(await page.locator('#passport-date').textContent(),/20 Aug/);
  await page.keyboard.press('Space');assert.match(await page.locator('#blink').textContent(),/Pause/);await page.keyboard.press('Escape');
@@ -36,6 +37,8 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
  await page.click('#mission-next');await page.click('#mission-next');assert.match(await page.locator('#mission-status').textContent(),/Add an observation/);
  await page.fill('#observation','The bright core differs between the two visits. <script> must remain plain text.');
  await page.fill('#explanation','Saturation, wavelength and calibration need checking.');
+ await page.goto(base+'/#learn');await page.goto(base+'/#1?mission=1');await page.waitForFunction(()=>!document.querySelector('#blink').disabled);assert.match(await page.inputValue('#observation'),/bright core/);assert.match(await page.inputValue('#explanation'),/Saturation/);
+ await page.click('#mission-next');await page.click('#mission-next');
  await page.click('#mission-next');assert.match(await page.locator('#mission-status').textContent(),/Investigation complete/);
  const noteDownload=page.waitForEvent('download');await page.click('#export-note');const note=await noteDownload;
  const notePath=await note.path();const json=JSON.parse(await fs.readFile(notePath,'utf8'));assert.equal(json.observations.length,2);assert.match(json.limitations,/saturated/);
