@@ -1,0 +1,393 @@
+{
+  "name": "Earth",
+  "subtitle": "Watch clouds change across 24 real full-disk observations.",
+  "credit": "NOAA/NESDIS/STAR \u00b7 GOES-19 ABI",
+  "notes": "A bundled historical sequence, not a live feed. Images retain NOAA\u2019s channel-specific display scales and labels. Infrared colors encode emitted radiance/brightness temperature, not visible surface color.",
+  "alignment": "Fixed satellite view; channel images share approximate full-disk framing.",
+  "channels": [
+    {
+      "id": "02",
+      "label": "C02 \u00b7 Red visible \u00b7 0.64 \u03bcm",
+      "sheet": "/sequences/earth-02.jpg",
+      "tileSize": 384,
+      "frames": [
+        {
+          "date": "2026-11-14T14:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181400_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181400-C02"
+        },
+        {
+          "date": "2026-11-14T14:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181410_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181410-C02"
+        },
+        {
+          "date": "2026-11-14T14:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181420_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181420-C02"
+        },
+        {
+          "date": "2026-11-14T14:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181430_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181430-C02"
+        },
+        {
+          "date": "2026-11-14T14:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181440_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181440-C02"
+        },
+        {
+          "date": "2026-11-14T14:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181450_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181450-C02"
+        },
+        {
+          "date": "2026-11-14T15:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181500_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181500-C02"
+        },
+        {
+          "date": "2026-11-14T15:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181510_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181510-C02"
+        },
+        {
+          "date": "2026-11-14T15:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181520_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181520-C02"
+        },
+        {
+          "date": "2026-11-14T15:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181530_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181530-C02"
+        },
+        {
+          "date": "2026-11-14T15:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181540_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181540-C02"
+        },
+        {
+          "date": "2026-11-14T15:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181550_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181550-C02"
+        },
+        {
+          "date": "2026-11-14T16:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181600_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181600-C02"
+        },
+        {
+          "date": "2026-11-14T16:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181610_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181610-C02"
+        },
+        {
+          "date": "2026-11-14T16:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181620_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181620-C02"
+        },
+        {
+          "date": "2026-11-14T16:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181630_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181630-C02"
+        },
+        {
+          "date": "2026-11-14T16:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181640_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181640-C02"
+        },
+        {
+          "date": "2026-11-14T16:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181650_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181650-C02"
+        },
+        {
+          "date": "2026-11-14T17:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181700_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181700-C02"
+        },
+        {
+          "date": "2026-11-14T17:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181710_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181710-C02"
+        },
+        {
+          "date": "2026-11-14T17:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181720_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181720-C02"
+        },
+        {
+          "date": "2026-11-14T17:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181730_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181730-C02"
+        },
+        {
+          "date": "2026-11-14T17:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181740_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181740-C02"
+        },
+        {
+          "date": "2026-11-14T17:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/02/20263181750_GOES19-ABI-FD-02-678x678.jpg",
+          "id": "20263181750-C02"
+        }
+      ]
+    },
+    {
+      "id": "09",
+      "label": "C09 \u00b7 Water vapor \u00b7 6.9 \u03bcm",
+      "sheet": "/sequences/earth-09.jpg",
+      "tileSize": 384,
+      "frames": [
+        {
+          "date": "2026-11-14T14:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181400_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181400-C09"
+        },
+        {
+          "date": "2026-11-14T14:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181410_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181410-C09"
+        },
+        {
+          "date": "2026-11-14T14:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181420_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181420-C09"
+        },
+        {
+          "date": "2026-11-14T14:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181430_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181430-C09"
+        },
+        {
+          "date": "2026-11-14T14:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181440_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181440-C09"
+        },
+        {
+          "date": "2026-11-14T14:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181450_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181450-C09"
+        },
+        {
+          "date": "2026-11-14T15:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181500_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181500-C09"
+        },
+        {
+          "date": "2026-11-14T15:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181510_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181510-C09"
+        },
+        {
+          "date": "2026-11-14T15:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181520_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181520-C09"
+        },
+        {
+          "date": "2026-11-14T15:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181530_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181530-C09"
+        },
+        {
+          "date": "2026-11-14T15:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181540_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181540-C09"
+        },
+        {
+          "date": "2026-11-14T15:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181550_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181550-C09"
+        },
+        {
+          "date": "2026-11-14T16:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181600_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181600-C09"
+        },
+        {
+          "date": "2026-11-14T16:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181610_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181610-C09"
+        },
+        {
+          "date": "2026-11-14T16:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181620_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181620-C09"
+        },
+        {
+          "date": "2026-11-14T16:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181630_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181630-C09"
+        },
+        {
+          "date": "2026-11-14T16:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181640_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181640-C09"
+        },
+        {
+          "date": "2026-11-14T16:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181650_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181650-C09"
+        },
+        {
+          "date": "2026-11-14T17:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181700_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181700-C09"
+        },
+        {
+          "date": "2026-11-14T17:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181710_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181710-C09"
+        },
+        {
+          "date": "2026-11-14T17:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181720_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181720-C09"
+        },
+        {
+          "date": "2026-11-14T17:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181730_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181730-C09"
+        },
+        {
+          "date": "2026-11-14T17:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181740_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181740-C09"
+        },
+        {
+          "date": "2026-11-14T17:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/09/20263181750_GOES19-ABI-FD-09-678x678.jpg",
+          "id": "20263181750-C09"
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "label": "C13 \u00b7 Clean infrared \u00b7 10.3 \u03bcm",
+      "sheet": "/sequences/earth-13.jpg",
+      "tileSize": 384,
+      "frames": [
+        {
+          "date": "2026-11-14T14:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181400_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181400-C13"
+        },
+        {
+          "date": "2026-11-14T14:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181410_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181410-C13"
+        },
+        {
+          "date": "2026-11-14T14:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181420_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181420-C13"
+        },
+        {
+          "date": "2026-11-14T14:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181430_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181430-C13"
+        },
+        {
+          "date": "2026-11-14T14:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181440_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181440-C13"
+        },
+        {
+          "date": "2026-11-14T14:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181450_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181450-C13"
+        },
+        {
+          "date": "2026-11-14T15:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181500_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181500-C13"
+        },
+        {
+          "date": "2026-11-14T15:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181510_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181510-C13"
+        },
+        {
+          "date": "2026-11-14T15:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181520_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181520-C13"
+        },
+        {
+          "date": "2026-11-14T15:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181530_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181530-C13"
+        },
+        {
+          "date": "2026-11-14T15:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181540_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181540-C13"
+        },
+        {
+          "date": "2026-11-14T15:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181550_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181550-C13"
+        },
+        {
+          "date": "2026-11-14T16:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181600_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181600-C13"
+        },
+        {
+          "date": "2026-11-14T16:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181610_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181610-C13"
+        },
+        {
+          "date": "2026-11-14T16:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181620_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181620-C13"
+        },
+        {
+          "date": "2026-11-14T16:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181630_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181630-C13"
+        },
+        {
+          "date": "2026-11-14T16:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181640_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181640-C13"
+        },
+        {
+          "date": "2026-11-14T16:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181650_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181650-C13"
+        },
+        {
+          "date": "2026-11-14T17:00:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181700_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181700-C13"
+        },
+        {
+          "date": "2026-11-14T17:10:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181710_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181710-C13"
+        },
+        {
+          "date": "2026-11-14T17:20:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181720_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181720-C13"
+        },
+        {
+          "date": "2026-11-14T17:30:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181730_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181730-C13"
+        },
+        {
+          "date": "2026-11-14T17:40:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181740_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181740-C13"
+        },
+        {
+          "date": "2026-11-14T17:50:00Z",
+          "source": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/20263181750_GOES19-ABI-FD-13-678x678.jpg",
+          "id": "20263181750-C13"
+        }
+      ]
+    }
+  ]
+}

@@ -151,8 +151,14 @@ function route(){
  cleanup();cleanup=()=>{};routeId++;
  const [path,query='']=location.hash.slice(1).split('?');const page=path||'home';
  document.querySelectorAll('nav a').forEach(a=>{const active=a.hash==='#'+page||(page==='1'&&a.hash==='#explore');if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
- if(page==='1')lab(new URLSearchParams(query));else if(page==='explore')catalogExplorer();else if(page==='earth'||page==='mars')planetView(page);else if(page==='compare')planetComparison();else if(page==='comet'||page==='0')comet();else if(page==='r-draconis'||page==='2')variableStarView();else if(page==='learn')learn();else if(page==='evidence')evidence();else home();
- mountObjectNavigation(page==='0'?'comet':page==='2'?'r-draconis':page);
+ const parameters=new URLSearchParams(query);
+ if(page==='1'){if(parameters.has('mission')||parameters.has('frame'))lab(parameters);else sequenceView('barnard',parameters);}
+ else if(page==='earth'||page==='mars'||page==='r-draconis')sequenceView(page,parameters);
+ else if(page==='comet'||page==='0')sequenceView('comet',parameters);
+ else if(page==='earth-overview'||page==='mars-overview')planetView(page.split('-')[0]);
+ else if(page==='comet-path')comet();else if(page==='r-draconis-history'||page==='2')variableStarView();
+ else if(page==='explore')catalogExplorer();else if(page==='compare')planetComparison();else if(page==='learn')learn();else if(page==='evidence')evidence();else home();
+ mountObjectNavigation(page==='0'||page==='comet-path'?'comet':page==='2'||page==='r-draconis-history'?'r-draconis':page.replace('-overview',''));
  document.title=(page==='r-draconis'||page==='2'?'R Draconis':page==='earth'?'Earth':page==='mars'?'Mars':page==='compare'?'Compare Planets':page==='explore'?'Explore All Objects':page==='1'?'Observation Lab':page==='comet'?'Interstellar Visitor':page==='learn'?'Field Guide':page==='evidence'?'Sources & Methods':'What Moved?')+' · Sky Motion Atlas';
 }
 $('present').onclick=()=>{const on=document.body.classList.toggle('presenting');$('present').textContent=on?'Exit presentation':'Present →';announce(on?'Presentation mode enabled.':'Presentation mode closed.');};

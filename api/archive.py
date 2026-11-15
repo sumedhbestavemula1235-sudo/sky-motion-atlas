@@ -124,6 +124,8 @@ def pair():
 
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
 PAGES = {
+    "/sequence.js": ("sequence.js", "application/javascript; charset=utf-8"),
+    "/sequence.css": ("sequence.css", "text/css; charset=utf-8"),
     "/variable.js": ("variable.js", "application/javascript; charset=utf-8"),
     "/assets/r-draconis-1955-04-23.png": ("assets/r-draconis-1955-04-23.png", "image/png"),
     "/assets/r-draconis-1993-08-13.png": ("assets/r-draconis-1993-08-13.png", "image/png"),
@@ -146,6 +148,14 @@ PAGES = {
     "/assets/barnards-star-2026.png": ("assets/barnards-star-2026.png", "image/png"),
 }
 
+
+# Only enumerate bundled sequence files; request paths never become filesystem paths.
+for asset in (PUBLIC / "sequences").glob("*"):
+    if asset.is_file() and asset.suffix in {".json", ".jpg"}:
+        PAGES["/sequences/" + asset.name] = (
+            "sequences/" + asset.name,
+            "application/json" if asset.suffix == ".json" else "image/jpeg",
+        )
 
 class handler(BaseHTTPRequestHandler):
     def send_bytes(self, status, mime, content, cache_control=None):

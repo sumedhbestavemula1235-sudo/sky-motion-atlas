@@ -9,6 +9,51 @@ observe, compare, consider alternatives, and preserve the evidence.
 
 ## The experience
 
+### Multi-frame time and wavelength explorer
+
+The default object routes now open a common time/comparison viewer with two date
+sliders, pointer/touch dragging, side-by-side mode, playback, a 24-frame filmstrip,
+source links, frame export and shareable band/date selections.
+
+| Object | Frames per band | Available bands/cameras |
+| --- | --- | --- |
+| Earth | 24 | GOES-19 ABI C02 (0.64 μm), C09 (6.9 μm), C13 (10.3 μm) |
+| Mars | 24 | Curiosity Mastcam left visible previews |
+| Barnard’s Star | 24 | SPHEREx D1–D6 |
+| R Draconis | 24 | SPHEREx D1–D6 |
+| 3I/ATLAS | 24 | SPHEREx D1–D6 |
+
+These are 528 distinct observation previews across 22 sequences. Every frame has
+an observation identifier, timestamp and source URL in `public/sequences/*.json`.
+Contact sheets contain actual separately retrieved observations; the UI crops
+each cell directly, without generating intermediate frames. PNG frame exports
+come from these resampled JPEG previews, not the original science-resolution FITS.
+
+Earth channels use matched timestamps and retain NOAA display scales. Mars
+photographs can have different camera pointings and must not be interpreted as
+registered surface change. The public Mars metadata does not establish separate
+wavelength channels for these shots, so its channel selector is disabled.
+SPHEREx exposes six detector bands here, not 102 independent monochromatic images.
+Each band uses a common stretch across its 24 frames. Exact target wavelength
+varies with detector position; quality flags are not masked and saturated sources
+remain unsuitable for brightness measurements. Comet frames track the predicted
+position rather than a fixed sky center; no detection is claimed.
+
+`scripts/build_sequences.py` reproduces the data retrieval and preview sheets.
+It caches upstream responses under `/tmp/atlas-sequence-cache`; the manifests
+record the selected observations, so a later rebuild can intentionally pick a
+different archive snapshot. All displayed data is bundled, not a live feed.
+
+The original mission remains at `#1?mission=1`, historical R Draconis plates at
+`#r-draconis-history` (also the original `#2` link), the comet path at
+`#comet-path`, and original planetary views at `#earth-overview` / `#mars-overview`.
+
+Sources: [NOAA ABI imagery](https://www.star.nesdis.noaa.gov/GOES/),
+[Curiosity raw imagery](https://science.nasa.gov/mission/msl-curiosity/multimedia/raw-images/),
+and [SPHEREx archive](https://irsa.ipac.caltech.edu/spherex-archive-documentation/).
+
+### Original guided investigation
+
 - A redesigned homepage with an actual-image blink preview and three investigations.
 - A guided 90-second mission with progress and a notebook-based conclusion.
 - Two real SPHEREx D3 frames: discrete blink, date stepping, side-by-side and
