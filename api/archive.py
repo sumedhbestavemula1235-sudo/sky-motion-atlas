@@ -1,72 +1,126 @@
-"""Read-only IRSA gateway. Only two fixed exposures and one mission table."""
+"""Read-only IRSA gateway with bundled, real-data preview fallbacks."""
+from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler
-from urllib.request import urlopen, Request
-from urllib.parse import urlsplit, parse_qs, urlencode
-from xml.etree import ElementTree as ET
 from io import BytesIO
-import base64, json
+from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs, urlencode, urlsplit
+from urllib.request import Request, urlopen
+from xml.etree import ElementTree as ET
+import base64
+import json
+import time
+import traceback
+
 
 BASE = "https://irsa.ipac.caltech.edu"
+CUTOUT_SERVICE = BASE + "/ibe/cutout"
+CENTER = (269.448, 4.768)
 EXPOSURES = [
     ("spherex_dr1", "2025W33_2C_0321_1"),
     ("spherex_qr3", "2026W34_2A_0081_1"),
 ]
+FALLBACK_IMAGES = [
+    "/assets/barnards-star-2025.png",
+    "/assets/barnards-star-2026.png",
+]
 
-def read(url):
-    with urlopen(Request(url, headers={"User-Agent": "MotionAtlas/1.0"}), timeout=20) as response:
-        return response.read()
+
+def read(url, attempts=3):
+    """Read an upstream resource, retrying short-lived IRSA failures."""
+    error = None
+    for attempt in range(attempts):
+        try:
+            request = Request(url, headers={"User-Agent": "MotionAtlas/1.1"})
+            with urlopen(request, timeout=20) as response:
+                return response.read()
+        except (HTTPError, URLError, TimeoutError) as exc:
+            error = exc
+            if attempt + 1 < attempts:
+                time.sleep(0.25 * (2**attempt))
+    raise error
+
 
 def table(url):
     root = ET.fromstring(read(url))
     for tab in root.findall(".//{*}TABLE"):
-        cols = [f.get("name", "").lower() for f in tab.findall("{*}FIELD")]
+        columns = [field.get("name", "").lower() for field in tab.findall("{*}FIELD")]
         for row in tab.findall(".//{*}TR"):
-            yield dict(zip(cols, [(c.text or "").strip() for c in row.findall("{*}TD")]))
+            values = [(cell.text or "").strip() for cell in row.findall("{*}TD")]
+            yield dict(zip(columns, values))
+
+
+def cutout_url(which):
+    """Resolve IRSA's DataLink #cutout row instead of downloading the full FITS."""
+    collection, observation = EXPOSURES[which]
+    datalink = BASE + "/datalink/links/spherex?" + urlencode(
+        {"ID": f"ivo://irsa.ipac/{collection}?{observation}/D3"}
+    )
+    record = next(
+        row
+        for row in table(datalink)
+        if row.get("semantics", "").endswith("#cutout") and row.get("path")
+    )
+    return CUTOUT_SERVICE + "?" + urlencode(
+        {
+            "ra": CENTER[0],
+            "dec": CENTER[1],
+            "size": 0.12,
+            "path": record["path"],
+        }
+    )
+
 
 def cutout(which):
     from astropy.io import fits
     from astropy.wcs import WCS
     import numpy as np
-    collection, obs = EXPOSURES[which]
-    link = BASE + "/datalink/links/spherex?" + urlencode({"ID":f"ivo://irsa.ipac/{collection}?{obs}/D3"})
-    url = next(r["access_url"] for r in table(link) if r.get("semantics","").endswith("#this"))
-    url += ("&" if "?" in url else "?") + urlencode({"center":"269.448,4.768", "size":"0.12"})
-    with fits.open(BytesIO(read(url)), memmap=False) as hdus:
-        hdu = hdus["IMAGE"] if "IMAGE" in hdus else next(h for h in hdus if h.data is not None and h.data.ndim == 2)
-        wcs = WCS(hdu.header, fobj=hdus).celestial
-        y,x = np.indices((192,192),dtype=float)
-        output = WCS(naxis=2)
-        output.wcs.crpix = [96.5,96.5]
-        output.wcs.crval = [269.448,4.768]
-        output.wcs.cdelt = [-1.6/3600,1.6/3600]
-        output.wcs.ctype = ["RA---TAN","DEC--TAN"]
-        ra,dec=output.pixel_to_world_values(x,191-y)
-        sx,sy=wcs.world_to_pixel_values(ra,dec)
-        ix,iy=np.rint(sx).astype(int),np.rint(sy).astype(int)
-        good=(ix>=0)&(iy>=0)&(ix<hdu.data.shape[1])&(iy<hdu.data.shape[0])
-        frame=np.full(x.shape,np.nan)
-        frame[good]=hdu.data[iy[good],ix[good]]
-        if np.isfinite(frame).mean()<0.5:
+
+    with fits.open(BytesIO(read(cutout_url(which))), memmap=False) as hdus:
+        hdu = hdus["IMAGE"] if "IMAGE" in hdus else next(
+            item for item in hdus if item.data is not None and item.data.ndim == 2
+        )
+        source_wcs = WCS(hdu.header, fobj=hdus).celestial
+        y, x = np.indices((192, 192), dtype=float)
+        output_wcs = WCS(naxis=2)
+        output_wcs.wcs.crpix = [96.5, 96.5]
+        output_wcs.wcs.crval = list(CENTER)
+        output_wcs.wcs.cdelt = [-1.6 / 3600, 1.6 / 3600]
+        output_wcs.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+        ra, dec = output_wcs.pixel_to_world_values(x, 191 - y)
+        source_x, source_y = source_wcs.world_to_pixel_values(ra, dec)
+        ix, iy = np.rint(source_x).astype(int), np.rint(source_y).astype(int)
+        good = (
+            (ix >= 0)
+            & (iy >= 0)
+            & (ix < hdu.data.shape[1])
+            & (iy < hdu.data.shape[0])
+        )
+        frame = np.full(x.shape, np.nan)
+        frame[good] = hdu.data[iy[good], ix[good]]
+        if np.isfinite(frame).mean() < 0.5:
             raise ValueError("Insufficient sky coverage")
         return frame
+
 
 def pair():
     import numpy as np
     from PIL import Image
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(2) as pool:
-        frames=list(pool.map(cutout,range(2)))
-    low,high=np.nanpercentile(frames,[3,99.7])
-    images=[]
-    for frame in frames:
-        contrast=np.clip((frame-low)/max(high-low,1e-9),0,1)
-        pixels=(255*np.arcsinh(8*np.nan_to_num(contrast))/np.arcsinh(8)).astype("uint8")
-        stream=BytesIO()
-        Image.fromarray(pixels).save(stream,format="PNG")
-        images.append("data:image/png;base64,"+base64.b64encode(stream.getvalue()).decode())
-    return {"images":images}
 
-from pathlib import Path
+    with ThreadPoolExecutor(2) as pool:
+        frames = list(pool.map(cutout, range(2)))
+    low, high = np.nanpercentile(np.stack(frames), [3, 99.7])
+    images = []
+    for frame in frames:
+        contrast = np.clip((frame - low) / max(high - low, 1e-9), 0, 1)
+        pixels = (
+            255 * np.arcsinh(8 * np.nan_to_num(contrast)) / np.arcsinh(8)
+        ).astype("uint8")
+        stream = BytesIO()
+        Image.fromarray(pixels).save(stream, format="PNG", optimize=True)
+        images.append("data:image/png;base64," + base64.b64encode(stream.getvalue()).decode())
+    return {"images": images, "source": "live-irsa-cutout"}
+
 
 PUBLIC = Path(__file__).resolve().parent.parent / "public"
 PAGES = {
@@ -75,37 +129,61 @@ PAGES = {
     "/practice.html": ("practice.html", "text/html; charset=utf-8"),
     "/guide.css": ("guide.css", "text/css; charset=utf-8"),
     "/guide.js": ("guide.js", "application/javascript; charset=utf-8"),
+    "/assets/barnards-star-2025.png": ("assets/barnards-star-2025.png", "image/png"),
+    "/assets/barnards-star-2026.png": ("assets/barnards-star-2026.png", "image/png"),
 }
 
+
 class handler(BaseHTTPRequestHandler):
+    def send_bytes(self, status, mime, content, cache_control=None):
+        self.send_response(status)
+        self.send_header("Content-Type", mime)
+        if cache_control:
+            self.send_header("Cache-Control", cache_control)
+        self.end_headers()
+        self.wfile.write(content)
+
     def do_GET(self):
         path = urlsplit(self.path).path
         if path in PAGES:
             name, mime = PAGES[path]
-            content = (PUBLIC / name).read_bytes()
-            self.send_response(200)
-            self.send_header("Content-Type", mime)
-            self.end_headers()
-            self.wfile.write(content)
+            self.send_bytes(200, mime, (PUBLIC / name).read_bytes(), "public, max-age=3600")
             return
         if path.rstrip("/") != "/api/archive":
             self.send_error(404)
             return
+
+        target = parse_qs(urlsplit(self.path).query).get("target", ["star"])[0]
         try:
-            if parse_qs(urlsplit(self.path).query).get("target")==["comet"]:
-                rows=[]
-                for r in table(BASE+"/data/SPHEREx/docs/comet3iatlas/obscore_3I_Atlas.vot"):
-                    rows.append([float(r["t_min"]),float(r["comet_ra"]),float(r["comet_dec"])])
-                if not rows: raise ValueError("Empty archive table")
-                result={"rows":sorted(set(map(tuple,rows)))}
+            if target == "comet":
+                rows = [
+                    [float(row["t_min"]), float(row["comet_ra"]), float(row["comet_dec"])]
+                    for row in table(
+                        BASE + "/data/SPHEREx/docs/comet3iatlas/obscore_3I_Atlas.vot"
+                    )
+                ]
+                if not rows:
+                    raise ValueError("Empty archive table")
+                result = {"rows": sorted(set(map(tuple, rows))), "source": "irsa-table"}
             else:
-                result=pair()
-            status=200
+                try:
+                    result = pair()
+                except Exception:
+                    traceback.print_exc()
+                    result = {
+                        "images": FALLBACK_IMAGES,
+                        "source": "bundled-irsa-previews",
+                        "notice": "Live archive unavailable; showing bundled previews.",
+                    }
+            status = 200
         except Exception:
-            result={"error":"Archive retrieval failed. Retry or open the source records."}
-            status=503
-        self.send_response(status)
-        self.send_header("Content-Type","application/json")
-        self.send_header("Cache-Control","public, s-maxage=86400" if status==200 else "no-store")
-        self.end_headers()
-        self.wfile.write(json.dumps(result).encode())
+            traceback.print_exc()
+            result = {"error": "Archive retrieval failed. Retry or open the source records."}
+            status = 503
+
+        self.send_bytes(
+            status,
+            "application/json",
+            json.dumps(result).encode(),
+            "public, s-maxage=86400" if status == 200 else "no-store",
+        )
