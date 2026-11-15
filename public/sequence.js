@@ -33,9 +33,10 @@ async function sequenceView(target,params=new URLSearchParams()){
  help.querySelector('.seq-help').innerHTML='<li>Press Blink to alternate two real observations.</li><li>Look for a change yourself, then click “Reveal change” to see the matched points, connecting lines and measurement.</li><li>Click “Start noticing” to record what you found.</li>';
  const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.setAttribute('viewBox','0 0 1000 1000');overlay.setAttribute('class','change-overlay');overlay.setAttribute('aria-hidden','true');$('seq-stage').append(overlay);
  const reveal=document.createElement('button');reveal.id='seq-reveal';reveal.className='primary';reveal.textContent='Reveal change';autoSummary.before(reveal);
- function showResults(show){overlay.style.visibility=show?'visible':'hidden';autoSummary.hidden=!show;reveal.textContent=show?'Hide change':'Reveal change';reveal.setAttribute('aria-pressed',String(show));$('seq-stage').classList.toggle('results-revealed',show);}
+ const differencePanel=document.createElement('section');differencePanel.id='seq-difference';differencePanel.className='panel';differencePanel.hidden=true;autoSummary.after(differencePanel);
+ function showResults(show){overlay.style.visibility=show?'visible':'hidden';autoSummary.hidden=!show;differencePanel.hidden=!show||!differencePanel.childElementCount;reveal.textContent=show?'Hide change':'Reveal change';reveal.setAttribute('aria-pressed',String(show));$('seq-stage').classList.toggle('results-revealed',show);}
  reveal.onclick=()=>{if(loaded)showResults(reveal.getAttribute('aria-pressed')!=='true');};showResults(false);
- function clearMarks(){showResults(false);autoRun=false;autoResult=null;$('seq-stage').classList.remove('auto-finished');$('auto-summary').textContent='Press Blink to compare A and B with automatic feature matching.';marks={};marking=null;overlay.replaceChildren();$('mark-result').textContent='Marks cleared. Choose “Mark in A” to start again.';}
+ function clearMarks(){showResults(false);differencePanel.replaceChildren();autoRun=false;autoResult=null;$('seq-stage').classList.remove('auto-finished');$('auto-summary').textContent='Press Blink to compare A and B with automatic feature matching.';marks={};marking=null;overlay.replaceChildren();$('mark-result').textContent='Marks cleared. Choose “Mark in A” to start again.';}
  function drawMarks(){
   overlay.style.display=mode==='pair'?'none':'';
   let connection='';
@@ -96,8 +97,20 @@ async function sequenceView(target,params=new URLSearchParams()){
   else $('auto-summary').textContent='Playing the real images. No reliable first-to-last feature match was found, so no motion path will be guessed.';
   draw();
  }
+ function revealImageDifference(){
+  const sample=document.createElement('canvas');sample.width=sample.height=96;const ctx=sample.getContext('2d',{willReadFrequently:true}),s=channel.tileSize;
+  const read=i=>{ctx.drawImage(sheet,i%6*s,Math.floor(i/6)*s,s,s,0,0,96,96);const data=ctx.getImageData(0,0,96,96).data;return Array.from({length:9216},(_,j)=>.2126*data[j*4]+.7152*data[j*4+1]+.0722*data[j*4+2]);};
+  const a=read(reference),b=read(current);let best={score:-1,x:40,y:40};
+  for(let y=0;y<=80;y+=8)for(let x=0;x<=80;x+=8){let sum=0;for(let j=y;j<y+16;j++)for(let i=x;i<x+16;i++)sum+=Math.abs(b[j*96+i]-a[j*96+i]);const score=sum/256;if(score>best.score)best={score,x,y};}
+  const value=best.score.toFixed(1),x=best.x/96*1000,y=best.y/96*1000;
+  overlay.innerHTML=`<rect x="${x}" y="${y}" width="166.67" height="166.67" fill="none" stroke="#ffad63" stroke-width="6"/><text x="${Math.max(260,Math.min(740,x+83))}" y="${Math.max(35,y-20)}" text-anchor="middle" fill="#ffce9e" stroke="#071018" stroke-width="8" paint-order="stroke" font-size="26">Pixel difference: ${value} / 255</text>`;
+  differencePanel.innerHTML=`<h3>Look inside the orange box</h3><p>Same image region, enlarged. This box has the largest average pixel difference in the sampled previews.</p><div class="difference-crops"><figure><canvas width="256" height="256" aria-label="Enlarged region in observation A"></canvas><figcaption>A · ${stamp(channel.frames[reference].date)}</figcaption></figure><figure><canvas width="256" height="256" aria-label="Enlarged region in observation B"></canvas><figcaption>B · ${stamp(channel.frames[current].date)}</figcaption></figure></div><p>Average absolute pixel difference: <strong>${value} out of 255</strong>. This measures displayed image values, not a physical distance or calibrated stellar brightness.</p>`;
+  differencePanel.querySelectorAll('canvas').forEach((c,j)=>{const i=j?current:reference,cx=c.getContext('2d');cx.imageSmoothingEnabled=false;cx.drawImage(sheet,i%6*s+best.x/96*s,Math.floor(i/6)*s+best.y/96*s,16/96*s,16/96*s,0,0,256,256);});
+  $('auto-summary').textContent=(best.score<.05?'No visible pixel change in this comparison. ':`The orange box highlights an image difference (${value} / 255), not a tracked object. `)+(target==='comet'?'These frames follow the predicted comet position; background stars can shift. The highlighted patch is not a confirmed comet detection.':'Compare the glow, shape and surrounding field. Saturation, noise, wavelength and alignment can change the image; this is not a measurement of R Draconis becoming brighter.');
+ }
  function finishAutomatic(){
   autoRun=false;
+  if(target==='comet'||target==='r-draconis'){marks={};revealImageDifference();$('auto-summary').textContent+=' This is a preview-image difference estimate.';$('seq-stage').classList.add('auto-finished');return;}
   if(autoResult){marks={a:autoResult.a,b:autoResult.b};drawMarks();const pixels=Math.hypot(marks.b.x-marks.a.x,marks.b.y-marks.a.y)/1000*channel.tileSize;
    const explanation=target==='mars'?'Camera pointing can account for this shift; it is not moving terrain.':target==='comet'?'The camera view follows the predicted comet position, so this may be a background feature.':target==='earth'?'Cloud shape, map projection and illumination can affect this estimate.':'Alignment, saturation and wavelength differences can affect this estimate.';
    $('auto-summary').textContent=(pixels<channel.tileSize/96?'The matched feature stays in nearly the same place. Look for shape or brightness differences. ':`The matched image feature shifts approximately ${pixels.toFixed(1)} preview pixels between the selected frames. `)+'Green = A; orange = B. '+explanation+' This is an image-pattern estimate, not confirmed physical motion.';
