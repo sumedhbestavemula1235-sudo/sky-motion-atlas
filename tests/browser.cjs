@@ -95,7 +95,16 @@ async function waitReady(){for(let i=0;i<20;i++){try{if((await fetch(base,{signa
   assert.equal(await page.inputValue('#seq-observation'),'Observation for '+route);
   await page.click('#seq-return-frames');
   assert.equal(await page.locator('#seq-stage').evaluate(el=>el===document.activeElement),true);
-  assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'single');await page.fill('#seq-time','23');const last=await page.locator('#seq-b').evaluate(c=>c.toDataURL());
+  assert.equal(await page.locator('#seq-stage').getAttribute('data-mode'),'blink');
+  assert.equal(await page.inputValue('#seq-time'),'23');
+  const blinkB=await page.locator('#seq-b').evaluate(c=>c.toDataURL());
+  await page.click('#seq-play');await page.waitForFunction(()=>document.querySelector('#seq-stage').dataset.blinkFrame==='a');
+  const blinkA=await page.locator('#seq-b').evaluate(c=>c.toDataURL());assert.notEqual(blinkA,blinkB);
+  await page.waitForFunction(()=>document.querySelector('#seq-stage').dataset.blinkFrame==='b');
+  assert.equal(await page.locator('#seq-b').evaluate(c=>c.toDataURL()),blinkB);
+  await page.click('#seq-play');assert.equal(await page.inputValue('#seq-time'),'23');
+  assert.match(await page.locator('#auto-summary').textContent(),/estimate|reliable matching/);
+  await page.click('[data-seq-mode="single"]');await page.fill('#seq-time','23');const last=await page.locator('#seq-b').evaluate(c=>c.toDataURL());
   await page.fill('#seq-time','0');const first=await page.locator('#seq-b').evaluate(c=>c.toDataURL());assert.notEqual(first,last,'First and last are different real images: '+route);
   await page.fill('#seq-time','23');await page.click('[data-seq-mode="wipe"]');await page.fill('#seq-reference','3');assert.match(await page.locator('#seq-passport-frame').textContent(),/24 \/ 24/);
   await page.click('[data-seq-mode="wipe"]');await page.locator('#seq-stage').scrollIntoViewIfNeeded();const bounds=await page.locator('#seq-stage').boundingBox();await page.mouse.move(bounds.x+bounds.width*.25,bounds.y+bounds.height*.5);await page.mouse.down();await page.mouse.move(bounds.x+bounds.width*.75,bounds.y+bounds.height*.5);await page.mouse.up();assert.ok(Number(await page.inputValue('#seq-wipe'))>70,'Draggable comparison works');
